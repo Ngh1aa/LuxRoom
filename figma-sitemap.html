@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LuxRoom | Site Map</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/figma-case-study.css" />
+</head>
+<body class="figma-screen">
+  <main class="figma-frame">
+    <div class="figma-kicker"><strong>LuxRoom / Information architecture</strong><span>Site map · 14 HTML routes</span></div>
+
+    <section class="figma-intro">
+      <div><p class="eyebrow">02 / Structure</p><h1>A clear path<br /><em>through the room.</em></h1></div>
+      <div class="figma-intro-copy"><p>The experience is organized around four jobs: discover the collection, evaluate a piece, complete a purchase and return to saved or ordered objects.</p></div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Primary architecture</p><div><h2>From inspiration<br />to ownership.</h2><p>The home page branches into discovery, commerce, account and service routes. Product detail remains the central decision point.</p></div></div>
+
+      <div class="site-map-canvas">
+        <div class="map-root"><a class="map-node root" href="index.html"><span>Entry / 01</span><strong>Home</strong><span>index.html</span></a></div>
+        <div class="map-groups">
+          <section class="map-group">
+            <p class="map-group-title">Discover</p>
+            <div class="map-stack">
+              <a class="map-node" href="products.html"><span>02 / Browse</span><strong>Collection</strong><span>products.html</span></a>
+              <a class="map-node" href="rooms.html"><span>03 / Context</span><strong>Rooms</strong><span>rooms.html</span></a>
+              <a class="map-node" href="detail.html?product=1"><span>04 / Evaluate</span><strong>Product detail</strong><span>detail.html</span></a>
+              <a class="map-node" href="collection.html"><span>Redirect</span><strong>Collection alias</strong><span>collection.html</span></a>
+            </div>
+          </section>
+
+          <section class="map-group">
+            <p class="map-group-title">Commerce</p>
+            <div class="map-stack">
+              <a class="map-node" href="cart.html"><span>05 / Review</span><strong>Cart</strong><span>cart.html</span></a>
+              <a class="map-node" href="checkout.html"><span>06 / Complete</span><strong>Checkout</strong><span>checkout.html</span></a>
+              <a class="map-node" href="success.html"><span>07 / Confirm</span><strong>Success</strong><span>success.html</span></a>
+              <a class="map-node" href="tracking.html"><span>08 / Follow</span><strong>Tracking</strong><span>tracking.html</span></a>
+            </div>
+          </section>
+
+          <section class="map-group">
+            <p class="map-group-title">Account</p>
+            <div class="map-stack">
+              <a class="map-node" href="wishlist.html"><span>09 / Save</span><strong>Wishlist</strong><span>wishlist.html</span></a>
+              <a class="map-node" href="auth.html"><span>10 / Access</span><strong>Sign in / Register</strong><span>auth.html</span></a>
+              <a class="map-node" href="profile.html"><span>11 / Return</span><strong>Profile</strong><span>profile.html</span></a>
+            </div>
+          </section>
+
+          <section class="map-group">
+            <p class="map-group-title">Brand & service</p>
+            <div class="map-stack">
+              <a class="map-node" href="about.html"><span>12 / Story</span><strong>Our story</strong><span>about.html</span></a>
+              <a class="map-node" href="contact.html"><span>13 / Support</span><strong>Contact</strong><span>contact.html</span></a>
+            </div>
+          </section>
+        </div>
+        <div class="map-flow-note"><strong>Core purchase path:</strong> Home → Collection / Rooms → Product detail → Cart → Checkout → Success → Tracking.</div>
+      </div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">User journeys</p><div><h2>Four routes,<br />four different intents.</h2><p>Each journey reduces a different kind of uncertainty: what fits, what feels right, what has been saved and what happens after payment.</p></div></div>
+      <div class="figma-grid figma-grid-4">
+        <article class="map-card" style="padding:24px"><p class="object-index">01 / Browse & buy</p><h3>Need → compare → decide</h3><p>Home → Collection → Product detail → Cart → Checkout</p></article>
+        <article class="map-card" style="padding:24px"><p class="object-index">02 / Shop by room</p><h3>Room → edit → fit</h3><p>Home → Rooms → Filtered collection → Product detail</p></article>
+        <article class="map-card" style="padding:24px"><p class="object-index">03 / Save & return</p><h3>Explore → save → revisit</h3><p>Collection → Wishlist → Sign in → Profile</p></article>
+        <article class="map-card" style="padding:24px"><p class="object-index">04 / Ask for help</p><h3>Uncertainty → support</h3><p>Product detail / Home → Contact → Room consultation</p></article>
+      </div>
+    </section>
+
+    <footer class="figma-footer"><a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a><small>The sitemap reflects the current LuxRoom static HTML prototype. The collection alias redirects to the primary products route.</small></footer>
+  </main>
+</body>
+</html>
