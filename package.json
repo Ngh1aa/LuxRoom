@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "qa": "node scripts/qa-home.mjs && node scripts/qa-product-detail.mjs && node scripts/qa-commerce-data.mjs && node scripts/qa-commerce-flow.mjs && node scripts/qa-all-pages.mjs"
+    "qa": "node scripts/qa-home.mjs && node scripts/qa-product-detail.mjs && node scripts/qa-commerce-data.mjs && node scripts/qa-commerce-flow.mjs && node scripts/qa-all-pages.mjs && node scripts/qa-purchase-confidence.mjs",
+    "qa:confidence": "node scripts/qa-purchase-confidence.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.3",

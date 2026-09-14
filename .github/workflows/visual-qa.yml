@@ -31,6 +31,8 @@ jobs:
       - name: Verify browser
         run: |
           "$CHROME_BIN" --version
+      - name: Run source and contract QA
+        run: npm run qa
       - name: Start static server
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/luxroom-server.log 2>&1 &
@@ -50,8 +52,18 @@ jobs:
           out.mkdir(parents=True, exist_ok=True)
 
           groups = {
-            'desktop': ['home-desktop','rooms-desktop','collection-desktop','detail-desktop','about-desktop','contact-desktop','cart-desktop','checkout-desktop','home-700','home-scrolled-desktop','home-desktop-shop','home-desktop-rooms','home-desktop-search','collection-room-desktop'],
-            'mobile': ['home-mobile','rooms-mobile','collection-mobile','detail-mobile','about-mobile','contact-mobile','cart-mobile','checkout-mobile','home-mobile-menu','home-mobile-search','collection-mobile-filter','collection-room-mobile-menu','detail-mobile-lower'],
+            'desktop': [
+              'home-desktop','rooms-desktop','collection-desktop','detail-desktop',
+              'compare-desktop','saved-room-seeded-desktop','about-desktop','contact-desktop',
+              'cart-desktop','checkout-desktop','detail-fit-desktop','home-desktop-shop',
+              'home-desktop-rooms','home-desktop-search','collection-room-desktop'
+            ],
+            'mobile': [
+              'home-mobile','rooms-mobile','collection-mobile','detail-mobile',
+              'compare-mobile','saved-room-seeded-mobile','about-mobile','contact-mobile',
+              'cart-mobile','checkout-mobile','home-mobile-menu','home-mobile-search',
+              'collection-mobile-filter','collection-room-mobile-menu','detail-mobile-lower'
+            ],
           }
 
           def make_sheet(name, items, cell=(360,240), cols=3):
