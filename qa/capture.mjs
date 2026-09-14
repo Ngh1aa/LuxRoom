@@ -9,9 +9,17 @@ const launchOptions = { headless: true };
 if (process.env.CHROME_BIN) launchOptions.executablePath = process.env.CHROME_BIN;
 const browser = await chromium.launch(launchOptions);
 
+async function settlePage(page, route) {
+  await page.goto(`${base}/${route}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.waitForLoadState('load', { timeout: 8000 }).catch(() => {});
+  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
+  await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+}
+
 async function capture(name, route, viewport, action) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  page.setDefaultTimeout(8000);
   const errors = [];
   const failedResponses = [];
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
@@ -19,8 +27,7 @@ async function capture(name, route, viewport, action) {
   page.on('response', response => {
     if (response.status() >= 400) failedResponses.push(`${response.status()} ${response.url()}`);
   });
-  await page.goto(`${base}/${route}`, { waitUntil: 'networkidle' });
-  await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+  await settlePage(page, route);
   await page.addStyleTag({ content: `*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;scroll-behavior:auto!important}` });
   if (action) await action(page);
   await page.waitForTimeout(250);
@@ -132,7 +139,8 @@ await capture('saved-room-seeded-desktop', 'saved-room.html', desktop, async pag
       updatedAt: new Date().toISOString()
     }));
   });
-  await page.reload({ waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
   await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
 });
 await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, async page => {
@@ -147,7 +155,8 @@ await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, async page 
       updatedAt: new Date().toISOString()
     }));
   });
-  await page.reload({ waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
   await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
 });
 
