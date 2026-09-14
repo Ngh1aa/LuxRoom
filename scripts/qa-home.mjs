@@ -3,9 +3,14 @@ import { resolve, dirname } from 'node:path';
 
 const root = resolve(process.cwd());
 const htmlPath = resolve(root, 'index.html');
-const cssPath = resolve(root, 'css/index.css');
+const pageCssPath = resolve(root, 'css/index.css');
+const systemCssPath = resolve(root, 'css/design-system.css');
+const commonCssPath = resolve(root, 'css/common.css');
 const html = readFileSync(htmlPath, 'utf8');
-const css = readFileSync(cssPath, 'utf8');
+const pageCss = readFileSync(pageCssPath, 'utf8');
+const systemCss = readFileSync(systemCssPath, 'utf8');
+const commonCss = readFileSync(commonCssPath, 'utf8');
+const css = `${systemCss}\n${commonCss}\n${pageCss}`;
 const failures = [];
 
 function assert(condition, message) {
@@ -20,32 +25,42 @@ for (const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
   }
 }
 
-for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
+for (const match of pageCss.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
   const value = match[1];
   if (value.startsWith('../img/')) {
-    assert(existsSync(resolve(dirname(cssPath), value)), `Missing CSS image asset: ${value}`);
+    assert(existsSync(resolve(dirname(pageCssPath), value)), `Missing CSS image asset: ${value}`);
   }
 }
 
 [
-  'Made for the',
-  'LuxRoomLiving',
-  'search-overlay',
   'home-hero',
+  'discovery-rail',
+  'edited-pieces',
+  'room-edit',
+  'commerce-assurance',
+  'studio',
   'newsletter-form',
+  'global-search-overlay',
 ].forEach((token) => assert(html.includes(token), `Missing required home component: ${token}`));
 
 [
   'Newsreader',
   'DM Sans',
-  '--home-clay',
-  '@media (max-width: 700px)',
+  '--clay',
+  '--paper',
+  '--hairline',
+  '@media (max-width: 820px)',
   'prefers-reduced-motion',
 ].forEach((token) => assert(css.includes(token), `Missing required responsive/design token: ${token}`));
+
+assert(html.includes('img/feedback/home-hero.jpg'), 'Missing image-led home hero asset');
+assert(html.includes('products.html?room=Living'), 'Missing room-led discovery route');
+assert(html.includes('products.html'), 'Missing collection discovery route');
+assert(css.includes('grid-template-columns'), 'Missing intentional desktop composition grid');
 
 if (failures.length) {
   console.error('Home QA failed:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
 
-console.log('Home QA passed: local links, image assets, key design components and responsive rules verified.');
+console.log('Home QA passed: local links, image assets, current architectural components, semantic tokens and responsive rules verified.');
