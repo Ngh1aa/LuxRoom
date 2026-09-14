@@ -15,20 +15,9 @@ async function settlePage(page, route) {
   await page.waitForFunction(() => document.readyState !== 'loading', null, { timeout: 5000 }).catch(() => {});
   await page.evaluate(async () => {
     if (!document.fonts?.ready) return;
-    await Promise.race([
-      document.fonts.ready,
-      new Promise((resolve) => setTimeout(resolve, 1500)),
-    ]);
+    await Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, 1200))]);
   }).catch(() => {});
-  await page.evaluate(async () => {
-    const images = [...document.images].filter((img) => !img.complete).slice(0, 12);
-    if (!images.length) return;
-    await Promise.race([
-      Promise.allSettled(images.map((img) => img.decode?.().catch(() => {}) || Promise.resolve())),
-      new Promise((resolve) => setTimeout(resolve, 1500)),
-    ]);
-  }).catch(() => {});
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(350);
 }
 
 async function capture(name, route, viewport, action) {
@@ -45,7 +34,7 @@ async function capture(name, route, viewport, action) {
   await settlePage(page, route);
   await page.addStyleTag({ content: `*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;scroll-behavior:auto!important}` });
   if (action) await action(page);
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(200);
   await page.screenshot({ path: `${out}/${name}.png`, fullPage: true });
   const metrics = await page.evaluate(() => {
     const accent = document.querySelector('#home-title em');
@@ -72,66 +61,34 @@ async function capture(name, route, viewport, action) {
 const desktop = { width: 1440, height: 1000 };
 const mobile = { width: 390, height: 844 };
 const tablet = { width: 768, height: 1024 };
-const smallLaptop = { width: 1024, height: 900 };
-const wide = { width: 1920, height: 1080 };
-const mid = { width: 700, height: 900 };
-const routes = [
-  ['home','index.html'],
-  ['rooms','rooms.html'],
-  ['collection','products.html'],
-  ['detail','detail.html?product=8'],
-  ['compare','compare.html?products=8,12'],
-  ['saved-room','saved-room.html'],
-  ['about','about.html'],
-  ['contact','contact.html'],
-  ['cart','cart.html'],
-  ['checkout','checkout.html'],
+const laptop = { width: 1024, height: 900 };
+
+const coreRoutes = [
+  ['home', 'index.html'],
+  ['collection', 'products.html'],
+  ['detail', 'detail.html?product=8'],
+  ['compare', 'compare.html?products=8,12'],
+  ['saved-room', 'saved-room.html'],
 ];
 
-for (const [name, route] of routes) {
+for (const [name, route] of coreRoutes) {
   await capture(`${name}-desktop`, route, desktop);
   await capture(`${name}-mobile`, route, mobile);
 }
 
-for (const [name, route] of routes.slice(0, 6)) {
-  await capture(`${name}-tablet`, route, tablet);
-  await capture(`${name}-1024`, route, smallLaptop);
-}
-await capture('home-wide', 'index.html', wide);
-await capture('home-700', 'index.html', mid);
+await capture('home-tablet', 'index.html', tablet);
+await capture('detail-1024', 'detail.html?product=8', laptop);
+await capture('collection-room-desktop', 'products.html?room=Living', desktop);
 
 await capture('home-desktop-shop', 'index.html', desktop, async page => {
-  const shopLink = page.locator('.nav-shop > a');
-  await shopLink.hover();
+  await page.locator('.nav-shop > a').hover();
   await page.locator('.nav-shop-flyout').waitFor({ state: 'visible' });
-});
-await capture('home-desktop-rooms', 'index.html', desktop, async page => {
-  const roomsLink = page.locator('.nav-rooms > a');
-  await roomsLink.hover();
-  await page.locator('.nav-rooms-flyout').waitFor({ state: 'visible' });
-});
-await capture('collection-room-desktop', 'products.html?room=Living', desktop);
-await capture('collection-room-mobile-menu', 'products.html?room=Living', mobile, async page => {
-  await page.locator('.mobile-menu-toggle').click();
-});
-await capture('home-desktop-search', 'index.html', desktop, async page => {
-  await page.locator('button[aria-label="Search"]').click();
-  await page.locator('#global-search-overlay.show').waitFor({ state: 'visible' });
 });
 await capture('home-mobile-menu', 'index.html', mobile, async page => {
   await page.locator('.mobile-menu-toggle').click();
 });
-await capture('home-mobile-search', 'index.html', mobile, async page => {
-  await page.locator('button[aria-label="Search"]').click();
-});
 await capture('collection-mobile-filter', 'products.html', mobile, async page => {
   await page.locator('.filter-toggle').click();
-});
-await capture('home-scrolled-desktop', 'index.html', desktop, async page => {
-  await page.evaluate(() => window.scrollTo(0, 650));
-});
-await capture('detail-mobile-lower', 'detail.html?product=8', mobile, async page => {
-  await page.locator('#will-it-fit').scrollIntoViewIfNeeded();
 });
 await capture('detail-fit-desktop', 'detail.html?product=8', desktop, async page => {
   await page.locator('#fit-form input[name="width"]').fill('420');
@@ -142,7 +99,8 @@ await capture('detail-fit-desktop', 'detail.html?product=8', desktop, async page
   await page.locator('#fit-result[data-status]').waitFor();
   await page.locator('#will-it-fit').scrollIntoViewIfNeeded();
 });
-await capture('saved-room-seeded-desktop', 'saved-room.html', desktop, async page => {
+
+async function seedSavedRoom(page) {
   await page.evaluate(() => {
     localStorage.setItem('luxroom-saved-room', JSON.stringify({
       room: 'Living',
@@ -156,23 +114,9 @@ await capture('saved-room-seeded-desktop', 'saved-room.html', desktop, async pag
   });
   await page.reload({ waitUntil: 'commit', timeout: 15000 });
   await page.locator('body').waitFor({ state: 'attached', timeout: 8000 });
-  await page.waitForTimeout(750);
-});
-await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, async page => {
-  await page.evaluate(() => {
-    localStorage.setItem('luxroom-saved-room', JSON.stringify({
-      room: 'Living',
-      measurements: { width: '420', depth: '360', doorway: '88', clearance: '60' },
-      items: [
-        { productId: 8, variantId: '8-1', finish: 'Warm linen' },
-        { productId: 12, variantId: '12-1', finish: 'Olive bouclé' }
-      ],
-      updatedAt: new Date().toISOString()
-    }));
-  });
-  await page.reload({ waitUntil: 'commit', timeout: 15000 });
-  await page.locator('body').waitFor({ state: 'attached', timeout: 8000 });
-  await page.waitForTimeout(750);
-});
+  await page.waitForTimeout(500);
+}
+await capture('saved-room-seeded-desktop', 'saved-room.html', desktop, seedSavedRoom);
+await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, seedSavedRoom);
 
 await browser.close();
