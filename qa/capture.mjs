@@ -10,10 +10,25 @@ if (process.env.CHROME_BIN) launchOptions.executablePath = process.env.CHROME_BI
 const browser = await chromium.launch(launchOptions);
 
 async function settlePage(page, route) {
-  await page.goto(`${base}/${route}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  await page.waitForLoadState('load', { timeout: 8000 }).catch(() => {});
-  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
-  await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+  await page.goto(`${base}/${route}`, { waitUntil: 'commit', timeout: 15000 });
+  await page.locator('body').waitFor({ state: 'attached', timeout: 8000 });
+  await page.waitForFunction(() => document.readyState !== 'loading', null, { timeout: 5000 }).catch(() => {});
+  await page.evaluate(async () => {
+    if (!document.fonts?.ready) return;
+    await Promise.race([
+      document.fonts.ready,
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+    ]);
+  }).catch(() => {});
+  await page.evaluate(async () => {
+    const images = [...document.images].filter((img) => !img.complete).slice(0, 12);
+    if (!images.length) return;
+    await Promise.race([
+      Promise.allSettled(images.map((img) => img.decode?.().catch(() => {}) || Promise.resolve())),
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+    ]);
+  }).catch(() => {});
+  await page.waitForTimeout(500);
 }
 
 async function capture(name, route, viewport, action) {
@@ -139,9 +154,9 @@ await capture('saved-room-seeded-desktop', 'saved-room.html', desktop, async pag
       updatedAt: new Date().toISOString()
     }));
   });
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
-  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
-  await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+  await page.reload({ waitUntil: 'commit', timeout: 15000 });
+  await page.locator('body').waitFor({ state: 'attached', timeout: 8000 });
+  await page.waitForTimeout(750);
 });
 await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, async page => {
   await page.evaluate(() => {
@@ -155,9 +170,9 @@ await capture('saved-room-seeded-mobile', 'saved-room.html', mobile, async page 
       updatedAt: new Date().toISOString()
     }));
   });
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
-  await page.waitForLoadState('networkidle', { timeout: 2500 }).catch(() => {});
-  await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+  await page.reload({ waitUntil: 'commit', timeout: 15000 });
+  await page.locator('body').waitFor({ state: 'attached', timeout: 8000 });
+  await page.waitForTimeout(750);
 });
 
 await browser.close();
