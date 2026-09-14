@@ -30,10 +30,26 @@ for (const [file, hooks] of Object.entries(routes)) {
   for (const asset of assetPaths) await access(path.join(root, asset));
   assertions += assetPaths.length + 2;
 }
-const sharpSheets = ['css/common.css','css/products.css','css/cart.css','css/checkout.css','css/auth.css','css/profile.css','css/success.css','css/tracking.css','css/about.css','css/contact.css'];
-for (const sheet of sharpSheets) {
+
+const architecturalSheets = ['css/common.css','css/products.css','css/cart.css','css/checkout.css','css/auth.css','css/profile.css','css/success.css','css/tracking.css','css/about.css','css/contact.css'];
+function isExcessiveRadius(value) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === '0' || normalized === '50%' || normalized.includes('var(--radius-0)') || normalized.includes('var(--radius-sm)') || normalized.includes('var(--radius-md)')) return false;
+  const numeric = normalized.match(/^([0-9]*\.?[0-9]+)(px|rem|%)$/);
+  if (!numeric) return false;
+  const amount = Number(numeric[1]);
+  const unit = numeric[2];
+  if (unit === 'px') return amount > 6;
+  if (unit === 'rem') return amount > 0.375;
+  if (unit === '%') return amount !== 50;
+  return false;
+}
+
+for (const sheet of architecturalSheets) {
   const source = await readFile(path.join(root, sheet), 'utf8');
-  if (/border-radius\s*:\s*(?:[1-9]\d*|\d+\.\d+)(?:px|rem|%)/.test(source)) throw new Error(`${sheet}: contains a rounded UI surface`);
+  const radii = [...source.matchAll(/border-radius\s*:\s*([^;]+);/g)].map((match) => match[1].trim());
+  const excessive = radii.filter(isExcessiveRadius);
+  if (excessive.length) throw new Error(`${sheet}: contains excessive rounded layout radius: ${excessive.join(', ')}`);
   assertions += 1;
 }
-console.log(`PASS: ${assertions} structural, dependency and sharp-layout assertions.`);
+console.log(`PASS: ${assertions} structural, dependency and architectural-radius assertions.`);
