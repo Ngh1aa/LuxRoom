@@ -6,6 +6,7 @@ on:
       - uiux/luxroom-research-v2
       - uiux/header-rooms-navigation
       - uiux/rooms-page-hero-fix
+      - feat/luxroom-motion-upgrade
       - main
     paths-ignore:
       - 'qa/evidence/**'
