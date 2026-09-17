@@ -99,12 +99,21 @@ function updateReview() {
   if (paymentReview) paymentReview.textContent = payment;
 }
 
+let reviewFrame = 0;
+function scheduleReview() {
+  if (reviewFrame) return;
+  reviewFrame = window.requestAnimationFrame(() => {
+    reviewFrame = 0;
+    updateReview();
+  });
+}
+
 function syncDeliveryPreference() {
   const method = selectedRadioValue("deliveryMethod") || "room";
   const location = locationByProvince[provinceField?.value] || window.LuxRoom.deliveryPreferences.location;
   window.LuxRoom.updateDeliveryPreferences({ method, location });
   renderCheckoutSummary();
-  updateReview();
+  scheduleReview();
 }
 
 function createOrder() {
@@ -164,11 +173,11 @@ if (checkoutForm) {
   const depositPayment = document.querySelector("#deposit-payment");
   if (depositPayment) depositPayment.hidden = !(window.LuxRoom.cartItems || []).some((item) => item.stockStatus === "Made to order");
 
-  checkoutForm.addEventListener("input", updateReview);
+  checkoutForm.addEventListener("input", scheduleReview);
   checkoutForm.addEventListener("change", (event) => {
     if (event.target.matches('input[name="paymentMethod"]')) toggleCardFields();
     if (event.target.matches('input[name="deliveryMethod"], #province')) syncDeliveryPreference();
-    updateReview();
+    else scheduleReview();
   });
   checkoutForm.addEventListener("submit", (event) => {
     event.preventDefault();
