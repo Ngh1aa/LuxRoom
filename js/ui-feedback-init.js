@@ -28,14 +28,22 @@ if (params.get('figma') === '1') {
 }
 
 if (params.get('feedback') === '1') {
-  import('../ui-feedback.js?v=4ef8421')
-    .then(({ createUIFeedback }) => {
-      createUIFeedback({
-        storageKey: 'luxroom-ui-feedback',
-        githubRepo: 'Ngh1aa/LuxRoom',
+  const loadFeedback = () => {
+    import('../ui-feedback.js?v=4ef8421')
+      .then(({ createUIFeedback }) => {
+        createUIFeedback({
+          storageKey: 'luxroom-ui-feedback',
+          githubRepo: 'Ngh1aa/LuxRoom',
+        });
+      })
+      .catch((error) => {
+        console.warn('[LuxRoom] UI feedback tool failed to load; product motion remains available.', error);
       });
-    })
-    .catch((error) => {
-      console.warn('[LuxRoom] UI feedback tool failed to load; public runtime remains available.', error);
-    });
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(loadFeedback, { timeout: 2000 });
+  } else {
+    window.setTimeout(loadFeedback, 1200);
+  }
 }

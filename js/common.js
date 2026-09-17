@@ -734,60 +734,12 @@ function initMotionSystem() {
 
 function initPageTransition() {
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  // Modern browsers can animate cross-document navigation natively. Prefer that
-  // path because it preserves browser history, focus and modifier-click behavior
-  // without delaying navigation in JavaScript.
-  const supportsNativePageTransitions = 'onpageswap' in window;
-  if (supportsNativePageTransitions || reduceMotion) return;
-  const veil = document.createElement('div');
-  veil.className = 'lux-veil';
-  veil.setAttribute('aria-hidden', 'true');
-  veil.innerHTML = `
-    <div class="lux-veil__inner">
-      <span class="lux-veil__line" aria-hidden="true"></span>
-      <span class="lux-veil__wordmark">LuxRoom</span>
-      <span class="lux-veil__line" aria-hidden="true"></span>
-    </div>`;
-  document.body.appendChild(veil);
+  if (reduceMotion) return;
 
-  document.body.classList.add('lux-page-entering');
-  window.setTimeout(() => document.body.classList.remove('lux-page-entering'), 560);
-
-  let navigating = false;
-  const isModifiedClick = (event) => (
-    event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
-  );
-  const isInternalNavigation = (link) => {
-    if (!link || link.hasAttribute('download') || link.target === '_blank' || link.dataset.noTransition !== undefined) return false;
-    const rawHref = link.getAttribute('href') || '';
-    if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('mailto:') || rawHref.startsWith('tel:') || rawHref.startsWith('javascript:')) return false;
-    let destination;
-    try {
-      destination = new URL(link.href, window.location.href);
-    } catch {
-      return false;
-    }
-    if (destination.origin !== window.location.origin) return false;
-    return `${destination.pathname}${destination.search}${destination.hash}` !== `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  };
-
-  document.addEventListener('click', (event) => {
-    if (navigating || event.defaultPrevented || isModifiedClick(event)) return;
-    const target = event.target;
-    const link = target instanceof Element ? target.closest('a[href]') : null;
-    if (!isInternalNavigation(link)) return;
-
-    event.preventDefault();
-    navigating = true;
-    document.body.classList.add('lux-page-leaving');
-    veil.classList.add('is-visible');
-    window.setTimeout(() => window.location.assign(link.href), 280);
-  }, true);
-
+  // Clean up any transition classes on pageshow (e.g. back/forward navigation)
   window.addEventListener('pageshow', () => {
-    navigating = false;
     document.body.classList.remove('lux-page-leaving');
-    veil.classList.remove('is-visible');
+    document.body.classList.remove('lux-page-entering');
   });
 }
 

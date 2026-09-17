@@ -26,9 +26,10 @@ const server = http.createServer((req, res) => {
     return;
   }
   const ext = path.extname(filePath).toLowerCase();
+  const cacheControl = ext === '.html' ? 'no-cache' : 'public, max-age=3600';
   res.writeHead(200, {
     'Content-Type': mimeTypes[ext] || 'application/octet-stream',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': cacheControl,
   });
   fs.createReadStream(filePath).pipe(res);
 });
