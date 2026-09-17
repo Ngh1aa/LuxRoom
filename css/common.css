@@ -496,6 +496,16 @@ button:disabled,
   transition-delay: var(--motion-delay, 0ms);
 }
 
+/* Never hide interactive UI that may be above the fold or used immediately */
+.lux-motion-ready .collection-index.motion-reveal,
+.lux-motion-ready .filter-toolbar.motion-reveal,
+.lux-motion-ready .expanded-filters.motion-reveal,
+.lux-motion-ready .collection-tools.motion-reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
 .lux-motion-ready .motion-reveal[data-motion-depth="deep"] {
   transform: translate3d(0, 22px, 0);
   transition-duration: 520ms;

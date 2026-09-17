@@ -121,7 +121,7 @@
 
 .product-grid-masonry { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(54px,6vw,88px) clamp(14px,1.8vw,26px); }
 .product-grid-masonry.filter-refreshing { opacity: .58; transition: opacity var(--duration-fast) var(--ease-out); }
-.product-card { min-width: 0; content-visibility: auto; contain-intrinsic-size: auto 550px; }
+.product-card { min-width: 0; }
 .product-card-inner { min-width: 0; }
 .product-thumb { position: relative; display: block; width: 100%; aspect-ratio: .78/1; overflow: hidden; border: 1px solid var(--hairline); background-position: center; background-size: cover; }
 .product-thumb::after { content: ""; position: absolute; inset: 9px; border: 1px solid rgba(255,255,255,.48); opacity: 0; pointer-events: none; transition: opacity var(--duration-normal) var(--ease-out); }

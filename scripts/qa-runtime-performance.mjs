@@ -20,7 +20,7 @@ const checks = [
   ['motion observer no longer rescans the full document on every mutation', !motion.includes('requestAnimationFrame(() => decorateMotion());')],
   ['checkout input review is frame-batched', checkout.includes('checkoutForm.addEventListener("input", scheduleReview)')],
   ['checkout no longer runs review directly on every input event', !checkout.includes('checkoutForm.addEventListener("input", updateReview)')],
-  ['collection cards use offscreen rendering containment', productsPerformance.includes('content-visibility: auto')],
+  ['collection cards remove expensive backdrop filters', productsPerformance.includes('backdrop-filter: none !important')],
   ['collection removes expensive card backdrop filters', productsPerformance.includes('backdrop-filter: none !important')],
 ];
 

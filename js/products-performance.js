@@ -61,10 +61,6 @@
   const style = document.createElement('style');
   style.id = 'luxroom-products-performance';
   style.textContent = `
-    .collection-page .product-card {
-      content-visibility: auto;
-      contain-intrinsic-size: auto 620px;
-    }
     .collection-page .product-thumb,
     .collection-page .product-thumb:hover {
       filter: none !important;
