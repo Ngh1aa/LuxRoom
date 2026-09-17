@@ -225,6 +225,14 @@
 
 ::selection { background: var(--clay); color: var(--paper); }
 
+/* Motion fail-safe: common.css owns the animated reveal state, but it must never
+   make content depend on JavaScript. common.js adds .lux-motion-ready only after
+   the observer path is initialized; until then every reveal target stays visible. */
+body:not(.lux-motion-ready) .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 @media (max-width: 820px) {
   :root {
     --nav-h: 66px;
