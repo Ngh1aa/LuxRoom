@@ -724,20 +724,12 @@ function initMotionSystem() {
   document.body.classList.add("lux-motion-ready");
   decorate();
 
-  const pendingNodes = new Set();
   let mutationFrame = 0;
-  const mutationObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node instanceof Element) pendingNodes.add(node);
-      });
-    });
-    if (!pendingNodes.size || mutationFrame) return;
+  const mutationObserver = new MutationObserver(() => {
+    if (mutationFrame) return;
     mutationFrame = window.requestAnimationFrame(() => {
-      const nodes = Array.from(pendingNodes);
-      pendingNodes.clear();
       mutationFrame = 0;
-      nodes.forEach((node) => decorate(node));
+      decorate(document);
     });
   });
   mutationObserver.observe(document.body, { childList: true, subtree: true });

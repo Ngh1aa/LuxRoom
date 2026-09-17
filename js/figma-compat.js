@@ -116,15 +116,13 @@
 
   prepare(document);
 
-  const observer = new MutationObserver((mutations) => {
-    const roots = new Set();
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node instanceof Element) roots.add(node);
-      });
+  let figmaFrame = 0;
+  const observer = new MutationObserver(() => {
+    if (figmaFrame) return;
+    figmaFrame = requestAnimationFrame(() => {
+      figmaFrame = 0;
+      prepare(document);
     });
-    if (!roots.size) return;
-    requestAnimationFrame(() => roots.forEach((node) => prepare(node)));
   });
 
   const startObserver = () => {

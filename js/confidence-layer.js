@@ -337,7 +337,14 @@
       <a href="detail.html?product=8#will-it-fit"><strong>Will it fit?</strong><small>Room + doorway guidance</small><span aria-hidden="true">↗</span></a>`;
     results.before(strip);
     enhanceProductCards(document);
-    const observer = new MutationObserver(() => enhanceProductCards(document));
+    let enhanceFrame = 0;
+    const observer = new MutationObserver(() => {
+      if (enhanceFrame) return;
+      enhanceFrame = requestAnimationFrame(() => {
+        enhanceFrame = 0;
+        enhanceProductCards(document);
+      });
+    });
     const grid = document.querySelector("#product-grid");
     if (grid) observer.observe(grid, { childList: true, subtree: true });
   }

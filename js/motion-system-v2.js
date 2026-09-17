@@ -169,20 +169,12 @@ function initMotionSystemV2() {
   /* Dynamic routes such as Collection, Compare and Saved Room replace subtrees.
      Only decorate the nodes that were actually added; rescanning the whole document
      on every mutation causes avoidable work and competes with route rendering. */
-  const pendingRoots = new Set();
   let decorationFrame = 0;
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node instanceof Element) pendingRoots.add(node);
-      });
-    });
-    if (!pendingRoots.size || decorationFrame) return;
+  const observer = new MutationObserver(() => {
+    if (decorationFrame) return;
     decorationFrame = requestAnimationFrame(() => {
-      const roots = Array.from(pendingRoots);
-      pendingRoots.clear();
       decorationFrame = 0;
-      roots.forEach((root) => decorateMotion(root));
+      decorateMotion(document);
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
