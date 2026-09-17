@@ -1,3 +1,11 @@
+(() => {
+  const currentScriptUrl = document.currentScript?.src || window.location.href;
+  const motionUrl = new URL('./motion-system-v2.js?v=20260917-livefix1', currentScriptUrl).href;
+  import(motionUrl).catch((error) => {
+    console.warn('[LuxRoom] Motion bootstrap failed; legacy reveal fallback will remain active.', error);
+  });
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   const revealItems = [...document.querySelectorAll('.reveal')]
     .filter((item) => item.dataset.luxroomMotionReady !== 'true');
