@@ -213,6 +213,7 @@ function renderProducts() {
   syncFilterAccessibility();
   refreshProductGridMotion();
 }
+window.renderProducts = renderProducts;
 
 function renderPagination(totalPages) {
   if (!paginationContainer) return;
@@ -396,13 +397,33 @@ function updatePriceSlider(event) {
 }
 
 if (rangeMin && rangeMax) {
+  let rangeTimer = 0;
+  let rangeFrame = 0;
+  const scheduleFilteredRender = () => {
+    window.clearTimeout(rangeTimer);
+    if (rangeFrame) window.cancelAnimationFrame(rangeFrame);
+    rangeTimer = window.setTimeout(() => {
+      rangeFrame = window.requestAnimationFrame(() => {
+        currentPage = 1;
+        renderProducts();
+      });
+    }, 60);
+  };
   const handleRangeUpdate = (event) => {
+    updatePriceSlider(event);
+    scheduleFilteredRender();
+  };
+  const handleRangeCommit = (event) => {
+    window.clearTimeout(rangeTimer);
+    if (rangeFrame) window.cancelAnimationFrame(rangeFrame);
     updatePriceSlider(event);
     currentPage = 1;
     renderProducts();
   };
   rangeMin.addEventListener("input", handleRangeUpdate);
   rangeMax.addEventListener("input", handleRangeUpdate);
+  rangeMin.addEventListener("change", handleRangeCommit);
+  rangeMax.addEventListener("change", handleRangeCommit);
   updatePriceSlider();
 }
 

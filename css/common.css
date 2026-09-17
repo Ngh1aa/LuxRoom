@@ -485,6 +485,64 @@ button:disabled,
   .newsletter-form button { flex: 0 0 auto; }
 }
 
+/* -------------------------------------------------
+   Spatial in-page motion reveal system (Performance Safe)
+   ------------------------------------------------- */
+.lux-motion-ready .motion-reveal {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 450ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--motion-delay, 0ms);
+}
+
+.lux-motion-ready .motion-reveal[data-motion-depth="deep"] {
+  transform: translate3d(0, 22px, 0);
+  transition-duration: 520ms;
+}
+
+.lux-motion-ready .motion-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Tactile micro-interactions for interactive elements */
+.primary-button,
+.secondary-button,
+.clear-filters-btn {
+  transition: transform var(--duration-fast, 180ms) var(--ease-out, ease-out),
+              background var(--duration-fast, 180ms) var(--ease-out, ease-out),
+              border-color var(--duration-fast, 180ms) var(--ease-out, ease-out),
+              color var(--duration-fast, 180ms) var(--ease-out, ease-out);
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.clear-filters-btn:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+.primary-button:active,
+.secondary-button:active,
+.icon-button:active,
+.clear-filters-btn:active {
+  transform: translate3d(0, 1px, 0) scale(0.985);
+}
+
+.text-link span[aria-hidden="true"],
+.hero-room-link span[aria-hidden="true"],
+.discovery-item b[aria-hidden="true"] {
+  display: inline-block;
+  transition: transform var(--duration-fast, 180ms) var(--ease-out, ease-out);
+}
+
+.text-link:hover span[aria-hidden="true"],
+.hero-room-link:hover span[aria-hidden="true"],
+.discovery-item:hover b[aria-hidden="true"] {
+  transform: translate3d(3px, 0, 0);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; }
+  .lux-motion-ready .motion-reveal,
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 }

@@ -669,8 +669,9 @@ initProfileOrders();
 
 function initMotionSystem() {
   const selectors = [
-    ".home-hero", ".home-section", ".collections", ".studio", ".newsletter",
+    ".home-hero", ".discovery-rail", ".home-section", ".collections", ".edited-pieces", ".studio", ".room-edit", ".commerce-assurance", ".newsletter",
     ".collection-hero", ".collection-index", ".filter-toolbar", ".expanded-filters", ".product-grid-masonry",
+    ".rooms-hero", ".room-index", ".room-atlas > article",
     ".d-gallery", ".di-header", ".d-spec", ".related-products",
     ".contact-intro", ".contact-grid", ".contact-quiet",
     ".story-hero", ".story-statement", ".material-triptych article", ".story-image-essay", ".newsletter-band",
@@ -680,7 +681,7 @@ function initMotionSystem() {
     ".success-message", ".success-steps", ".wishlist-hero", ".wishlist-empty",
     ".footer-rich__top > *", ".footer-rich__bottom"
   ];
-  const deepMotion = new Set(["home-hero", "collection-hero", "story-hero", "auth-essay", "checkout-intro"]);
+  const deepMotion = new Set(["home-hero", "collection-hero", "story-hero", "auth-essay", "checkout-intro", "rooms-hero"]);
   let sequence = 0;
   let observer;
 
@@ -695,7 +696,7 @@ function initMotionSystem() {
     } else {
       node.style.setProperty("--motion-delay", `${Math.min(sequence, 8) * 45}ms`);
     }
-    if (deepMotion.has(node.classList[0]) || node.classList.contains("home-hero") || node.classList.contains("collection-hero") || node.classList.contains("story-hero") || node.classList.contains("auth-essay") || node.classList.contains("checkout-intro")) {
+    if (deepMotion.has(node.classList[0]) || node.classList.contains("home-hero") || node.classList.contains("collection-hero") || node.classList.contains("story-hero") || node.classList.contains("auth-essay") || node.classList.contains("checkout-intro") || node.classList.contains("rooms-hero")) {
       node.dataset.motionDepth = "deep";
     }
     sequence += 1;
@@ -717,16 +718,27 @@ function initMotionSystem() {
         entry.target.classList.add("is-visible");
         observer.unobserve(entry.target);
       });
-    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    }, { threshold: 0.08, rootMargin: "0px 0px 40px 0px" });
   }
 
   document.body.classList.add("lux-motion-ready");
   decorate();
 
+  const pendingNodes = new Set();
+  let mutationFrame = 0;
   const mutationObserver = new MutationObserver((mutations) => {
-    if (mutations.some((mutation) => mutation.addedNodes.length > 0)) {
-      window.requestAnimationFrame(() => decorate());
-    }
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof Element) pendingNodes.add(node);
+      });
+    });
+    if (!pendingNodes.size || mutationFrame) return;
+    mutationFrame = window.requestAnimationFrame(() => {
+      const nodes = Array.from(pendingNodes);
+      pendingNodes.clear();
+      mutationFrame = 0;
+      nodes.forEach((node) => decorate(node));
+    });
   });
   mutationObserver.observe(document.body, { childList: true, subtree: true });
 }

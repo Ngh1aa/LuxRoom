@@ -121,13 +121,13 @@
 
 .product-grid-masonry { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(54px,6vw,88px) clamp(14px,1.8vw,26px); }
 .product-grid-masonry.filter-refreshing { opacity: .58; transition: opacity var(--duration-fast) var(--ease-out); }
-.product-card,.product-card-inner { min-width: 0; }
-.product-thumb { position: relative; display: block; width: 100%; aspect-ratio: .78/1; overflow: hidden; border: 1px solid var(--hairline); background-position: center; background-size: cover; filter: saturate(.88); transition: filter var(--duration-normal) var(--ease-out); }
+.product-card { min-width: 0; content-visibility: auto; contain-intrinsic-size: auto 550px; }
+.product-card-inner { min-width: 0; }
+.product-thumb { position: relative; display: block; width: 100%; aspect-ratio: .78/1; overflow: hidden; border: 1px solid var(--hairline); background-position: center; background-size: cover; }
 .product-thumb::after { content: ""; position: absolute; inset: 9px; border: 1px solid rgba(255,255,255,.48); opacity: 0; pointer-events: none; transition: opacity var(--duration-normal) var(--ease-out); }
-.product-thumb:hover { filter: saturate(1); }
 .product-thumb:hover::after { opacity: 1; }
-.product-card-label { position: absolute; top: 14px; left: 14px; z-index: 2; padding: 7px 8px 6px; background: color-mix(in srgb,var(--paper) 88%,transparent); color: var(--ink); font: 600 .56rem/1 var(--font-ui); letter-spacing: .11em; text-transform: uppercase; backdrop-filter: blur(8px); }
-.wishlist-heart { position: absolute; top: 11px; right: 11px; z-index: 3; width: 40px; height: 40px; display: grid; place-items: center; background: color-mix(in srgb,var(--paper) 82%,transparent); border: 1px solid rgba(255,255,255,.4); color: var(--ink); cursor: pointer; backdrop-filter: blur(8px); }
+.product-card-label { position: absolute; top: 14px; left: 14px; z-index: 2; padding: 7px 8px 6px; background: color-mix(in srgb,var(--paper) 95%,transparent); color: var(--ink); font: 600 .56rem/1 var(--font-ui); letter-spacing: .11em; text-transform: uppercase; }
+.wishlist-heart { position: absolute; top: 11px; right: 11px; z-index: 3; width: 40px; height: 40px; display: grid; place-items: center; background: color-mix(in srgb,var(--paper) 92%,transparent); border: 1px solid rgba(255,255,255,.4); color: var(--ink); cursor: pointer; }
 .wishlist-heart::before { content: "♡"; font-size: 1.35rem; line-height: 1; }
 .wishlist-heart:hover,.wishlist-heart.is-wishlisted { color: var(--clay); }
 .wishlist-heart.is-wishlisted::before { content: "♥"; }

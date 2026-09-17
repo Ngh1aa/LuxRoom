@@ -16,9 +16,9 @@ function setMotionPreference() {
 }
 
 const sectionVariants = [
-  ['.home-hero, .collection-hero, .story-hero, .auth-essay, .checkout-intro', 'hero'],
+  ['.home-hero, .collection-hero, .rooms-hero, .story-hero, .auth-essay, .checkout-intro', 'hero'],
   ['.studio, .home-story, .story-image-essay, .contact-grid, .d-gallery', 'split'],
-  ['.edited-pieces, .room-edit, .commerce-assurance, .collections, .related-products, .product-grid-masonry', 'stagger'],
+  ['.edited-pieces, .room-edit, .commerce-assurance, .collections, .related-products, .product-grid-masonry, .room-index', 'stagger'],
   ['.newsletter, .newsletter-band, .signup, .cart-assurance, .contact-quiet', 'quiet'],
 ];
 
@@ -32,6 +32,8 @@ const cardSelectors = [
   '.order-card',
   '.saved-card',
   '.compare-card',
+  '.room-index a',
+  '.room-atlas article',
 ];
 
 function forEachMatch(scope, selector, callback) {
