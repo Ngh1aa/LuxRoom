@@ -46,9 +46,15 @@ function renderCheckoutSummary() {
       : '<div class="summary-empty"><strong>Nothing selected yet.</strong><a href="products.html">Explore pieces <span aria-hidden="true">↗</span></a></div>';
   }
 
-  if (checkoutSubtotal) checkoutSubtotal.textContent = window.LuxRoom.formatMoney(totals.subtotal);
+  if (checkoutSubtotal) {
+    checkoutSubtotal.textContent = window.LuxRoom.formatMoney(totals.subtotal);
+    window.LuxRoomMotion?.flashPrice(checkoutSubtotal);
+  }
   if (checkoutShipping) checkoutShipping.textContent = totals.shipping ? window.LuxRoom.formatMoney(totals.shipping) : "Included";
-  if (checkoutTotal) checkoutTotal.textContent = window.LuxRoom.formatMoney(totals.total);
+  if (checkoutTotal) {
+    checkoutTotal.textContent = window.LuxRoom.formatMoney(totals.total);
+    window.LuxRoomMotion?.flashPrice(checkoutTotal);
+  }
   if (checkoutArrival) checkoutArrival.textContent = arrival?.label || "—";
   if (checkoutDeliveryLabel) checkoutDeliveryLabel.textContent = window.LuxRoom.deliveryPreferences.method === "placement" ? "Room delivery + placement" : "Room delivery";
   if (placeOrderButton) {

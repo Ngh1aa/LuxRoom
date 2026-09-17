@@ -119,10 +119,11 @@ function showAddedButtonState(button, productName) {
 
 function refreshProductGridMotion() {
   if (!productGrid) return;
-  productGrid.classList.remove("filter-refreshing");
-  void productGrid.offsetWidth;
-  productGrid.classList.add("filter-refreshing");
-  window.requestAnimationFrame(() => productGrid.classList.remove("filter-refreshing"));
+  const cards = productGrid.querySelectorAll(".product-card");
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${Math.min(index * 35, 220)}ms`;
+    card.classList.add("motion-card-enter");
+  });
 }
 
 function syncActiveFilterChips(totalItems) {

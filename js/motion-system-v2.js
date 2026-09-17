@@ -1,4 +1,4 @@
-const MOTION_STYLESHEET = '../css/motion-system-v2.css?v=20260917-1';
+const MOTION_STYLESHEET = '../css/motion-system-v2.css?v=20260917-2';
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function ensureMotionStylesheet() {
@@ -94,12 +94,70 @@ function initFinePointerState() {
   finePointer.addEventListener?.('change', sync);
 }
 
+function initScrollState() {
+  const topbar = document.querySelector('.topbar');
+  if (!topbar) return;
+
+  let ticking = false;
+  const updateScroll = () => {
+    const isScrolled = window.scrollY > 20;
+    topbar.classList.toggle('is-scrolled', isScrolled);
+    ticking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  updateScroll();
+}
+
+function pulseCartBadge() {
+  if (reducedMotionQuery.matches) return;
+  const badges = document.querySelectorAll('.cart-badge, [data-cart-count]');
+  badges.forEach((badge) => {
+    badge.classList.remove('has-pulse');
+    void badge.offsetWidth;
+    badge.classList.add('has-pulse');
+    setTimeout(() => badge.classList.remove('has-pulse'), 400);
+  });
+}
+
+function flashPrice(element) {
+  if (!element || reducedMotionQuery.matches) return;
+  element.classList.remove('price-flash');
+  void element.offsetWidth;
+  element.classList.add('price-flash');
+  setTimeout(() => element.classList.remove('price-flash'), 550);
+}
+
+function crossfadeBackground(element, newUrl) {
+  if (!element) return;
+  if (reducedMotionQuery.matches) {
+    element.style.backgroundImage = `url('${newUrl}')`;
+    return;
+  }
+  element.classList.remove('lux-image-crossfade');
+  void element.offsetWidth;
+  element.style.backgroundImage = `url('${newUrl}')`;
+  element.classList.add('lux-image-crossfade');
+  setTimeout(() => element.classList.remove('lux-image-crossfade'), 350);
+}
+
 function initMotionSystemV2() {
   ensureMotionStylesheet();
   setMotionPreference();
   decorateMotion();
   prepareUnmanagedSections();
   initFinePointerState();
+  initScrollState();
+
+  document.addEventListener('luxroom-cart-updated', () => {
+    pulseCartBadge();
+  });
 
   const observer = new MutationObserver((mutations) => {
     if (!mutations.some((mutation) => mutation.addedNodes.length)) return;
@@ -114,5 +172,12 @@ function initMotionSystemV2() {
     }
   });
 }
+
+window.LuxRoomMotion = {
+  pulseCartBadge,
+  flashPrice,
+  crossfadeBackground,
+  decorateMotion,
+};
 
 initMotionSystemV2();

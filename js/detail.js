@@ -74,7 +74,12 @@ function updateGallery() {
     button.classList.toggle("is-selected", index === 0);
   });
   if (nodes.specImage) {
-    nodes.specImage.style.backgroundImage = `url('./${selectedGallery[0] || selectedProduct.image}')`;
+    const nextUrl = `./${selectedGallery[0] || selectedProduct.image}`;
+    if (window.LuxRoomMotion?.crossfadeBackground) {
+      window.LuxRoomMotion.crossfadeBackground(nodes.specImage, nextUrl);
+    } else {
+      nodes.specImage.style.backgroundImage = `url('${nextUrl}')`;
+    }
     nodes.specImage.setAttribute("aria-label", `${selectedProduct.name} in ${selectedVariant.finish}`);
   }
 }
@@ -98,8 +103,14 @@ function updateDelivery() {
 
 function updateVariantDetails() {
   const price = window.LuxRoom.formatMoney(selectedVariant.price);
-  if (nodes.price) nodes.price.textContent = price;
-  if (nodes.mobilePrice) nodes.mobilePrice.textContent = price;
+  if (nodes.price) {
+    nodes.price.textContent = price;
+    window.LuxRoomMotion?.flashPrice(nodes.price);
+  }
+  if (nodes.mobilePrice) {
+    nodes.mobilePrice.textContent = price;
+    window.LuxRoomMotion?.flashPrice(nodes.mobilePrice);
+  }
   if (nodes.mobileFinish) nodes.mobileFinish.textContent = selectedVariant.finish;
   if (nodes.materialSummary) nodes.materialSummary.textContent = `${selectedVariant.material} / ${Object.values(selectedProduct.materialDetails)[1] || selectedProduct.materialGroup}`;
   if (nodes.stockSummary) nodes.stockSummary.textContent = selectedVariant.stockStatus;
@@ -189,6 +200,7 @@ function setupAccordions() {
 function addSelectedToCart() {
   window.LuxRoom.addToCart(selectedProduct.id, selectedQuantity, selectedVariant.variantId);
   window.LuxRoom.showToast(`${selectedProduct.name} in ${selectedVariant.finish} added to your selection.`);
+  window.LuxRoomMotion?.pulseCartBadge();
   if (nodes.addedConfirmation) nodes.addedConfirmation.hidden = false;
 }
 

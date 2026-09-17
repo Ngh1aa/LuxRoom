@@ -15,9 +15,15 @@ function renderCart() {
     node.textContent = String(items.reduce((count, item) => count + Number(item.quantity), 0));
     node.style.display = "inline";
   });
-  if (subtotalNode) subtotalNode.textContent = window.LuxRoom.formatMoney(totals.subtotal);
+  if (subtotalNode) {
+    subtotalNode.textContent = window.LuxRoom.formatMoney(totals.subtotal);
+    window.LuxRoomMotion?.flashPrice(subtotalNode);
+  }
   if (shippingNode) shippingNode.textContent = totals.shipping ? window.LuxRoom.formatMoney(totals.shipping) : "Included";
-  if (totalNode) totalNode.textContent = window.LuxRoom.formatMoney(totals.total);
+  if (totalNode) {
+    totalNode.textContent = window.LuxRoom.formatMoney(totals.total);
+    window.LuxRoomMotion?.flashPrice(totalNode);
+  }
   if (deliveryLocation) deliveryLocation.value = window.LuxRoom.deliveryPreferences.location;
   if (checkoutLink) {
     checkoutLink.classList.toggle("is-disabled", items.length === 0);
