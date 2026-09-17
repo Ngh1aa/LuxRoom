@@ -1,0 +1,24 @@
+name: PR Runtime QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'qa/evidence/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run source, route and runtime regression QA
+        run: npm run qa
