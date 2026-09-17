@@ -34,28 +34,33 @@ const cardSelectors = [
   '.compare-card',
 ];
 
+function forEachMatch(scope, selector, callback) {
+  if (scope instanceof Element && scope.matches(selector)) callback(scope);
+  scope.querySelectorAll?.(selector).forEach(callback);
+}
+
 function decorateMotion(scope = document) {
   sectionVariants.forEach(([selector, variant]) => {
-    scope.querySelectorAll(selector).forEach((node) => {
+    forEachMatch(scope, selector, (node) => {
       if (!node.dataset.motionV2) node.dataset.motionV2 = variant;
     });
   });
 
-  scope.querySelectorAll('main > section').forEach((section) => {
+  forEachMatch(scope, 'main > section', (section) => {
     if (!section.dataset.motionV2) section.dataset.motionV2 = 'quiet';
   });
 
   cardSelectors.forEach((selector) => {
-    scope.querySelectorAll(selector).forEach((node) => {
+    forEachMatch(scope, selector, (node) => {
       node.dataset.motionCard = 'true';
     });
   });
 
-  scope.querySelectorAll('.primary-button, .secondary-button, .text-link, .hero-room-link, .view-detail-link, .mini-cart-link, .page-back-link').forEach((node) => {
+  forEachMatch(scope, '.primary-button, .secondary-button, .text-link, .hero-room-link, .view-detail-link, .mini-cart-link, .page-back-link', (node) => {
     node.dataset.motionAction = 'true';
   });
 
-  scope.querySelectorAll('input, textarea, select').forEach((node) => {
+  forEachMatch(scope, 'input, textarea, select', (node) => {
     node.dataset.motionField = 'true';
   });
 }
@@ -159,9 +164,24 @@ function initMotionSystemV2() {
     pulseCartBadge();
   });
 
+  /* Dynamic routes such as Collection, Compare and Saved Room replace subtrees.
+     Only decorate the nodes that were actually added; rescanning the whole document
+     on every mutation causes avoidable work and competes with route rendering. */
+  const pendingRoots = new Set();
+  let decorationFrame = 0;
   const observer = new MutationObserver((mutations) => {
-    if (!mutations.some((mutation) => mutation.addedNodes.length)) return;
-    requestAnimationFrame(() => decorateMotion());
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof Element) pendingRoots.add(node);
+      });
+    });
+    if (!pendingRoots.size || decorationFrame) return;
+    decorationFrame = requestAnimationFrame(() => {
+      const roots = Array.from(pendingRoots);
+      pendingRoots.clear();
+      decorationFrame = 0;
+      roots.forEach((root) => decorateMotion(root));
+    });
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
