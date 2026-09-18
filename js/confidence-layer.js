@@ -234,6 +234,40 @@
     };
   }
 
+  function hasRoomMeasurements(room) {
+    const measurements = room?.measurements || {};
+    return ["width", "depth", "doorway"].every((key) => Number(measurements[key]) > 0);
+  }
+
+  function roomFitForProduct(product, room = getSavedRoom()) {
+    if (!product || !hasRoomMeasurements(room)) return null;
+    return getFitGuidance(product, room.measurements);
+  }
+
+  function returnabilityLabel(product) {
+    return product.returnable
+      ? "14-day return request"
+      : "Made to order · confirm before production";
+  }
+
+  function roomDecisionSummary(room, entries) {
+    const fits = entries.map(({ product }) => roomFitForProduct(product, room)).filter(Boolean);
+    const likely = fits.filter((fit) => fit.status === "likely").length;
+    const needsReview = fits.filter((fit) => fit.status === "doorway" || fit.status === "confirm").length;
+    const longestLead = entries.reduce((max, { variant }) => Math.max(max, Number(variant?.leadTimeMax) || 0), 0);
+    const total = entries.reduce((sum, { variant }) => sum + (Number(variant?.price) || 0), 0);
+    return {
+      fitLabel: !hasRoomMeasurements(room)
+        ? "Measurements needed"
+        : needsReview
+          ? `${needsReview} access / fit check${needsReview === 1 ? "" : "s"}`
+          : `${likely} likely fit${likely === 1 ? "" : "s"}`,
+      fitTone: !hasRoomMeasurements(room) ? "pending" : needsReview ? "review" : "likely",
+      longestLead: longestLead ? `Up to ${longestLead} days` : "Add a piece",
+      total: app.formatMoney(total),
+    };
+  }
+
   function activeDetailVariant(product) {
     const finish = document.querySelector(".finish-option.active")?.dataset.finish;
     return product.variants.find((variant) => variant.finish === finish) || product.variants[0];
@@ -555,6 +589,7 @@
       return app.getVariant(product, saved?.variantId) || product.variants[0];
     };
     const rows = [
+      ["Room fit", (product) => roomFitForProduct(product, savedRoom)?.label || "Save room measurements to check"],
       ["Dimensions", (product) => formatDimensions(product)],
       ["Material", (product) => selectedVariant(product).material],
       ["Finish", (product) => selectedVariant(product).finish],
@@ -562,6 +597,7 @@
       ["Lead time", (product) => `${selectedVariant(product).leadTimeMin}–${selectedVariant(product).leadTimeMax} days`],
       ["Delivery", (product) => product.deliveryType],
       ["Care", (product) => product.care?.[0] || "See product care"],
+      ["Returns", (product) => returnabilityLabel(product)],
       ["Warranty", (product) => product.warrantyGuidance],
     ];
 
@@ -605,16 +641,32 @@
       const items = room.items.map((item) => {
         const product = app.getProduct(item.productId);
         const variant = app.getVariant(product, item.variantId);
-        return { item, product, variant };
+        return { item, product, variant, fit: product ? roomFitForProduct(product, room) : null };
       }).filter((entry) => entry.product);
 
-      grid.innerHTML = items.length ? items.map(({ product, variant }, index) => `
+      const decisionSummary = document.querySelector("#saved-room-decision-summary");
+      if (decisionSummary) {
+        const summary = roomDecisionSummary(room, items);
+        decisionSummary.dataset.fitTone = summary.fitTone;
+        decisionSummary.innerHTML = `
+          <article><span>Room fit</span><strong>${escapeHtml(summary.fitLabel)}</strong><small>${hasRoomMeasurements(room) ? "Prototype guidance across saved pieces." : "Save room width, depth and doorway above."}</small></article>
+          <article><span>Saved value</span><strong>${escapeHtml(summary.total)}</strong><small>Selected prototype variants.</small></article>
+          <article><span>Longest lead</span><strong>${escapeHtml(summary.longestLead)}</strong><small>Use the slowest piece when planning the room.</small></article>
+          <article><span>Handoff</span><strong>${items.length ? "Brief ready" : "Add a piece"}</strong><small>Consultation carries room constraints and saved pieces forward.</small></article>`;
+      }
+
+      grid.innerHTML = items.length ? items.map(({ product, variant, fit }, index) => `
         <article class="saved-room-item">
           <a href="detail.html?product=${product.id}" class="saved-room-item__image" style="background-image:url('${escapeHtml(variant.images?.[0] || product.image)}')" aria-label="View ${escapeHtml(product.name)}"></a>
           <div class="saved-room-item__copy">
             <span class="object-index">${String(index + 1).padStart(2, "0")} / ${escapeHtml(product.category)}</span>
             <h2>${escapeHtml(product.name)}</h2>
             <p>${formatDimensions(product)}<br />${escapeHtml(variant.finish)} · ${escapeHtml(variant.material)}</p>
+            <dl class="saved-room-item__evidence">
+              <div><dt>Room fit</dt><dd data-fit-status="${escapeHtml(fit?.status || "pending")}">${escapeHtml(fit?.label || "Save measurements to check")}</dd></div>
+              <div><dt>Timing</dt><dd>${variant.leadTimeMin}–${variant.leadTimeMax} days</dd></div>
+              <div><dt>Returns</dt><dd>${escapeHtml(returnabilityLabel(product))}</dd></div>
+            </dl>
             <div><button type="button" data-compare-product="${product.id}" aria-pressed="${isCompared(product.id)}"><span data-action-label>${isCompared(product.id) ? "Compared" : "Compare"}</span></button><button type="button" data-remove-room-product="${product.id}">Remove</button></div>
           </div>
         </article>`).join("") : `
@@ -629,7 +681,12 @@
     const pieces = room.items.map((item) => item.productId).join(",");
     const consult = document.querySelector("#saved-room-consult");
     if (consult) {
-      consult.href = `contact.html?topic=room${pieces ? `&pieces=${pieces}` : ""}`;
+      const params = new URLSearchParams({ topic: "room", room: room.room });
+      if (pieces) params.set("pieces", pieces);
+      Object.entries(room.measurements).forEach(([key, value]) => {
+        if (String(value).trim()) params.set(key, String(value));
+      });
+      consult.href = `contact.html?${params.toString()}`;
       consult.classList.toggle("is-disabled", !pieces);
       consult.setAttribute("aria-disabled", String(!pieces));
     }
@@ -687,6 +744,60 @@
     document.addEventListener("luxroom-compare-updated", syncCompareUi);
   }
 
+  function enhanceConsultationHandoff() {
+    if (!document.body.classList.contains("contact-page")) return;
+    const params = new URLSearchParams(window.location.search);
+    const topic = params.get("topic");
+    const pieceIds = (params.get("pieces") || "").split(",").map(Number).filter((id) => app.getProduct(id));
+    const hasContext = topic || pieceIds.length || ["room", "width", "depth", "doorway", "clearance"].some((key) => params.get(key));
+    if (!hasContext) return;
+
+    const subject = document.querySelector(`input[name="subject"][value="${topic === "room" ? "room" : topic === "delivery" ? "delivery" : "product"}"]`);
+    if (subject) subject.checked = true;
+
+    const savedRoom = getSavedRoom();
+    const roomName = params.get("room") || savedRoom.room || "Room";
+    const measurements = {
+      width: params.get("width") || savedRoom.measurements.width,
+      depth: params.get("depth") || savedRoom.measurements.depth,
+      doorway: params.get("doorway") || savedRoom.measurements.doorway,
+      clearance: params.get("clearance") || savedRoom.measurements.clearance,
+    };
+    const pieces = pieceIds.map((id) => {
+      const product = app.getProduct(id);
+      const saved = savedRoom.items.find((item) => item.productId === id);
+      const variant = app.getVariant(product, saved?.variantId);
+      return { product, variant };
+    }).filter(({ product }) => product);
+
+    const measurementText = measurements.width && measurements.depth
+      ? `${measurements.width} × ${measurements.depth} cm room${measurements.doorway ? ` · ${measurements.doorway} cm doorway` : ""}${measurements.clearance ? ` · ${measurements.clearance} cm desired clearance` : ""}`
+      : "Measurements not yet confirmed";
+    const piecesText = pieces.length
+      ? pieces.map(({ product, variant }) => `${product.name}${variant?.finish ? ` — ${variant.finish}` : ""}`).join("; ")
+      : "No saved piece attached";
+
+    const message = document.querySelector("#message");
+    if (message && !message.value.trim()) {
+      message.value = topic === "room"
+        ? `Room: ${roomName}\nMeasurements: ${measurementText}\nSaved pieces: ${piecesText}\n\nI would like help confirming fit, access, finish coordination and delivery before deciding.`
+        : `Object enquiry: ${piecesText}\n\nI would like help confirming dimensions, finish, availability and delivery access.`;
+    }
+
+    const form = document.querySelector("#contact-form");
+    if (form && !document.querySelector(".consultation-brief")) {
+      const brief = document.createElement("aside");
+      brief.className = "consultation-brief";
+      brief.setAttribute("aria-label", "Loaded consultation brief");
+      brief.innerHTML = `
+        <span class="object-index">Context carried forward</span>
+        <div><strong>${escapeHtml(roomName)}</strong><small>${escapeHtml(measurementText)}</small></div>
+        <div><strong>${pieces.length} saved piece${pieces.length === 1 ? "" : "s"}</strong><small>${escapeHtml(piecesText)}</small></div>
+        <p>Prototype handoff only. Review and edit the note before sending.</p>`;
+      form.prepend(brief);
+    }
+  }
+
   function setupSavedRoomPage() {
     if (!document.body.classList.contains("saved-room-page")) return;
     const form = document.querySelector("#saved-room-measurements");
@@ -721,5 +832,6 @@
   enhanceDetail();
   renderCompare();
   setupSavedRoomPage();
+  enhanceConsultationHandoff();
   syncCompareUi();
 })();
