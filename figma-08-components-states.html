@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LuxRoom | 08 — Components & States</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/figma-case-study.css" />
+  <link rel="stylesheet" href="css/figma-12.css" />
+</head>
+<body class="figma-screen">
+  <main class="figma-frame">
+    <div class="figma-kicker"><strong>LuxRoom / 08 Components & states</strong><span>Variants · feedback · accessibility</span></div>
+    <nav class="f12-nav" aria-label="Bộ 12 Figma"><a href="figma-01-overview.html"><span>01</span><strong>Overview</strong></a><a href="figma-02-research.html"><span>02</span><strong>Research</strong></a><a href="figma-03-strategy.html"><span>03</span><strong>Strategy</strong></a><a href="figma-04-ia.html"><span>04</span><strong>IA</strong></a><a href="figma-05-user-flows.html"><span>05</span><strong>User flows</strong></a><a href="figma-06-wireframes.html"><span>06</span><strong>Exploration</strong></a><a href="figma-07-design-system.html"><span>07</span><strong>Design system</strong></a><a href="figma-08-components-states.html" aria-current="page"><span>08</span><strong>States</strong></a><a href="figma-09-final-ui.html"><span>09</span><strong>Final UI</strong></a><a href="figma-10-responsive.html"><span>10</span><strong>Responsive</strong></a><a href="figma-11-prototype.html"><span>11</span><strong>Prototype</strong></a><a href="figma-12-iteration-handoff.html"><span>12</span><strong>Iteration</strong></a></nav>
+
+    <section class="figma-intro">
+      <div><p class="eyebrow">08 / Components & states</p><h1>Calm surfaces.<br /><em>Visible feedback.</em></h1></div>
+      <div class="figma-intro-copy"><p>Interaction states are subtle but explicit. The system avoids visual noise while making hover, selection, focus, error and completion easy to read.</p></div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Buttons</p><div><h2>Action hierarchy<br />without decoration.</h2><p>Primary actions carry the strongest contrast. Secondary actions stay outlined. Disabled states reduce emphasis without changing layout.</p></div></div>
+      <div class="figma-grid figma-grid-4">
+        <article class="state-card"><div class="state-card-head"><strong>Primary</strong><span>Default</span></div><div class="state-stage"><a class="primary-button" href="#">Add to cart ↗</a></div><p class="state-caption">Ink surface, paper text, 48px control height.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Primary</strong><span>Hover</span></div><div class="state-stage"><a class="primary-button" href="#" style="background:var(--clay);border-color:var(--clay)">Add to cart ↗</a></div><p class="state-caption">Clay signals intent while retaining the same geometry.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Secondary</strong><span>Default</span></div><div class="state-stage"><a class="secondary-button" href="#">Ask about this piece</a></div><p class="state-caption">Quiet outlined action for support and exploration.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Primary</strong><span>Disabled</span></div><div class="state-stage"><span class="primary-button demo-button-disabled">Unavailable</span></div><p class="state-caption">Reduced opacity keeps hierarchy without suggesting clickability.</p></article>
+      </div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Product card</p><div><h2>Browse, inspect,<br />save for later.</h2><p>The card stays editorial in default state and gains just enough contrast during interaction. Wishlist feedback is persistent and unmistakable.</p></div></div>
+      <div class="figma-grid figma-grid-3">
+        <article class="state-card"><div class="state-card-head"><strong>Product card</strong><span>Default</span></div><div class="product-state"><div class="product-state-media"><button class="heart" aria-label="Save">♡</button></div><div class="product-state-copy"><span>Seating / Living</span><h3>Miro Lounge Chair</h3><strong>$320</strong></div></div><p class="state-caption">Neutral border and calm image field.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Product card</strong><span>Hover</span></div><div class="product-state is-hover"><div class="product-state-media"><button class="heart" aria-label="Save">♡</button></div><div class="product-state-copy"><span>Seating / Living</span><h3>Miro Lounge Chair</h3><strong>$320 · View details ↗</strong></div></div><p class="state-caption">Border strengthens and the card lifts by only 2px.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Product card</strong><span>Saved</span></div><div class="product-state"><div class="product-state-media"><button class="heart is-saved" aria-label="Saved">♥</button></div><div class="product-state-copy"><span>Seating / Living</span><h3>Miro Lounge Chair</h3><strong>$320 · Saved</strong></div></div><p class="state-caption">Persistent black heart makes the saved state legible at a glance.</p></article>
+      </div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Filters</p><div><h2>Selection should<br />feel immediate.</h2><p>Filters use compact chips and simple active fills. Applied constraints remain visible so users always know why the collection changed.</p></div></div>
+      <div class="figma-grid figma-grid-3">
+        <article class="state-card"><div class="state-card-head"><strong>Filter chip</strong><span>Default</span></div><div class="state-stage"><div class="filter-demo"><span class="demo-chip">Living</span><span class="demo-chip">Dining</span><span class="demo-chip">Bedroom</span></div></div><p class="state-caption">Outlined controls keep unselected options quiet.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Filter chip</strong><span>Active</span></div><div class="state-stage"><div class="filter-demo"><span class="demo-chip is-active">Living</span><span class="demo-chip">Dining</span><span class="demo-chip">Bedroom</span></div></div><p class="state-caption">Ink fill creates immediate selection confirmation.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Applied filters</strong><span>Multiple</span></div><div class="state-stage"><div class="filter-demo"><span class="demo-chip is-muted">Living ×</span><span class="demo-chip is-muted">Textile ×</span><span class="demo-chip is-muted">In stock ×</span></div></div><p class="state-caption">Active constraints stay removable and readable.</p></article>
+      </div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Form fields</p><div><h2>Practical tasks need<br />stronger feedback.</h2><p>Checkout fields use visible focus, validation and completion cues while preserving the restrained visual language.</p></div></div>
+      <div class="figma-grid figma-grid-4">
+        <article class="state-card"><div class="state-card-head"><strong>Input</strong><span>Default</span></div><div class="state-stage"><input class="demo-input" placeholder="Email address" /></div><p class="state-caption">Hairline border on paper.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Input</strong><span>Focus</span></div><div class="state-stage"><input class="demo-input is-focus" value="hello@luxroom.com" /></div><p class="state-caption">Blue focus ring is reserved for accessibility and keyboard confidence.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Input</strong><span>Error</span></div><div class="state-stage"><input class="demo-input is-error" value="hello@" /><div class="status-line"><span class="status-dot error"></span><span>Please enter a valid email.</span></div></div><p class="state-caption">Error red appears only when action is required.</p></article>
+        <article class="state-card"><div class="state-card-head"><strong>Input</strong><span>Complete</span></div><div class="state-stage"><input class="demo-input" value="Ho Chi Minh City" /><div class="status-line"><span class="status-dot"></span><span>Delivery area confirmed.</span></div></div><p class="state-caption">Success remains secondary to the field content.</p></article>
+      </div>
+    </section>
+
+    <section class="figma-section">
+      <div class="figma-section-head"><p class="eyebrow">Disclosure</p><div><h2>Show detail<br />when it matters.</h2><p>Accordions keep material, care and delivery evidence available without overwhelming the decision stage.</p></div></div>
+      <div class="figma-grid figma-grid-2">
+        <article class="state-card"><div class="state-card-head"><strong>Accordion</strong><span>Closed</span></div><div class="accordion-demo"><div class="accordion-row"><div><span>Materials</span><span>+</span></div></div><div class="accordion-row"><div><span>Care & longevity</span><span>+</span></div></div><div class="accordion-row"><div><span>Delivery & returns</span><span>+</span></div></div></div></article>
+        <article class="state-card"><div class="state-card-head"><strong>Accordion</strong><span>Open</span></div><div class="accordion-demo"><div class="accordion-row"><div><span>Dimensions & fit</span><span>−</span></div><p>Overall W 82 × D 76 × H 70 cm. Allow at least 60 cm of clear circulation around the piece.</p></div><div class="accordion-row"><div><span>Materials</span><span>+</span></div></div></div></article>
+      </div>
+    </section>
+
+    <footer class="figma-footer"><a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a><small>Static component-state presentation for Figma import. No JavaScript, lazy loading or runtime-generated layers are used on this page.</small></footer>
+  </main>
+</body>
+</html>
