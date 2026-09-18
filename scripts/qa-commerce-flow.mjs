@@ -11,6 +11,7 @@ const requirements = {
   "tracking.html": ["tracking-current-status", "tracking-timeline", "tracking-items"],
   "wishlist.html": ["wishlist-total-value", "move-all-to-cart", "share-room", "request-consultation"],
   "js/common.js": ["variantId", "leadTimeMin", "deliveryPreferences", "getArrivalWindow", "getCartTotals"],
+  "js/cart.js": ["cart-row cart-item", "cart-product cart-item-product", "cart-product-image cart-item-image", "cart-qty cart-item-quantity", "cart-item-total", "cart-remove cart-item-remove"],
   "js/checkout.js": ["luxroom-last-order", "luxroom-orders", "createOrder", "combinedArrivalWindow"],
 };
 
