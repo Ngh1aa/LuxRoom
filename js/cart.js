@@ -36,18 +36,22 @@ function renderCart() {
   } else {
     cartContainer.innerHTML = items.map((item) => {
       const arrival = window.LuxRoom.getArrivalWindow(item).label;
-      return `<article class="cart-row" data-cart-row="${item.key}">
-        <div class="cart-product">
-          <div class="cart-product-image" style="background-image:url('${item.image}')" role="img" aria-label="${item.name} in ${item.finish}"></div>
-          <div class="cart-product-info"><strong>${item.name}</strong><span>${item.finish} · ${item.material}</span><small>Estimated arrival ${arrival}</small></div>
+      return `<article class="cart-row cart-item" data-cart-row="${item.key}">
+        <div class="cart-product cart-item-product">
+          <div class="cart-product-image cart-item-image" style="background-image:url('${item.image}')" role="img" aria-label="${item.name} in ${item.finish}"></div>
+          <div class="cart-product-info cart-item-info">
+            <h3>${item.name}</h3>
+            <p class="cart-item-variant">${item.finish} · ${item.material}</p>
+            <p class="cart-item-meta">Estimated arrival ${arrival}</p>
+          </div>
         </div>
-        <div class="cart-qty" aria-label="Quantity for ${item.name}">
+        <div class="cart-qty cart-item-quantity" aria-label="Quantity for ${item.name}">
           <button type="button" data-cart-decrease="${item.key}" aria-label="Decrease ${item.name}">−</button>
           <span class="cart-qty-value">${item.quantity}</span>
           <button type="button" data-cart-increase="${item.key}" aria-label="Increase ${item.name}">+</button>
         </div>
-        <span>${window.LuxRoom.formatMoney(Number(item.price) * Number(item.quantity))}</span>
-        <button class="cart-remove" type="button" data-cart-remove="${item.key}" aria-label="Remove ${item.name}">×</button>
+        <span class="cart-item-total">${window.LuxRoom.formatMoney(Number(item.price) * Number(item.quantity))}</span>
+        <button class="cart-remove cart-item-remove" type="button" data-cart-remove="${item.key}" aria-label="Remove ${item.name}">×</button>
       </article>`;
     }).join("");
   }
