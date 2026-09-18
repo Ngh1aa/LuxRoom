@@ -7,7 +7,6 @@ on:
       - uiux/header-rooms-navigation
       - uiux/rooms-page-hero-fix
       - feat/luxroom-motion-upgrade
-      - feat/luxroom-purchase-confidence-v2
       - main
     paths-ignore:
       - 'qa/evidence/**'
