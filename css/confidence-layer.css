@@ -461,3 +461,90 @@
   .technical-drawing { overflow-x: auto; }
   .saved-room-item__copy { padding: 34px 0; }
 }
+
+
+/* Purchase Confidence V2 — decision evidence without changing LuxRoom art direction. */
+.saved-room-decision-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--ink);
+  border-left: 1px solid var(--hairline);
+  margin-bottom: clamp(36px, 5vw, 64px);
+}
+.saved-room-decision-summary article {
+  min-height: 138px;
+  padding: 20px;
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+.saved-room-decision-summary span,
+.saved-room-item__evidence dt {
+  color: var(--stone);
+  font: 600 9px/1.2 var(--font-ui);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.saved-room-decision-summary strong {
+  font: 500 clamp(1.25rem, 1.8vw, 1.8rem)/1.08 var(--font-display);
+}
+.saved-room-decision-summary small {
+  color: var(--stone);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.saved-room-decision-summary[data-fit-tone="likely"] article:first-child { box-shadow: inset 3px 0 0 var(--success); }
+.saved-room-decision-summary[data-fit-tone="review"] article:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+.saved-room-item__evidence {
+  margin: 24px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--hairline);
+}
+.saved-room-item__evidence > div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.saved-room-item__evidence dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.saved-room-item__evidence dd[data-fit-status="likely"] { color: var(--success); }
+.saved-room-item__evidence dd[data-fit-status="doorway"],
+.saved-room-item__evidence dd[data-fit-status="confirm"] { color: var(--warning); }
+
+.consultation-brief {
+  margin: 0 0 28px;
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--clay);
+  background: var(--canvas);
+}
+.consultation-brief > div {
+  display: grid;
+  grid-template-columns: minmax(120px, .4fr) 1fr;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+.consultation-brief strong { font-size: var(--text-sm); }
+.consultation-brief small,
+.consultation-brief p { color: var(--stone); font-size: var(--text-xs); line-height: 1.55; }
+.consultation-brief p { margin: 0; }
+
+@media (max-width: 900px) {
+  .saved-room-decision-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .saved-room-decision-summary { grid-template-columns: 1fr; }
+  .saved-room-decision-summary article { min-height: 0; }
+  .consultation-brief > div { grid-template-columns: 1fr; gap: 5px; }
+}
