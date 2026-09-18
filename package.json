@@ -1,9 +1,10 @@
 {
   "scripts": {
-    "qa": "node scripts/qa-home.mjs && node scripts/qa-product-detail.mjs && node scripts/qa-commerce-data.mjs && node scripts/qa-commerce-flow.mjs && node scripts/qa-all-pages.mjs && node scripts/qa-purchase-confidence.mjs && node scripts/qa-motion-upgrade.mjs && node scripts/qa-runtime-performance.mjs",
+    "qa": "node scripts/qa-home.mjs && node scripts/qa-product-detail.mjs && node scripts/qa-commerce-data.mjs && node scripts/qa-commerce-flow.mjs && node scripts/qa-all-pages.mjs && node scripts/qa-purchase-confidence.mjs && node scripts/qa-motion-upgrade.mjs && node scripts/qa-runtime-performance.mjs && node scripts/qa-figma-12.mjs",
     "qa:confidence": "node scripts/qa-purchase-confidence.mjs",
     "qa:motion": "node scripts/qa-motion-upgrade.mjs",
-    "qa:runtime": "node scripts/qa-runtime-performance.mjs"
+    "qa:runtime": "node scripts/qa-runtime-performance.mjs",
+    "qa:figma12": "node scripts/qa-figma-12.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.3",
