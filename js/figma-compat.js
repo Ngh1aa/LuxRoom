@@ -59,6 +59,57 @@
     });
   };
 
+  const materializeEditableBackgrounds = (scope) => {
+    if (!captureMode) return;
+
+    const selector = [
+      '[data-bg]',
+      '[role="img"]',
+      '[class*="image"]',
+      '[class*="img"]',
+      '[class*="thumb"]',
+      '[class*="visual"]',
+      '[class*="media"]'
+    ].join(',');
+
+    collect(scope, selector).forEach((node) => {
+      if (!(node instanceof Element) || node instanceof HTMLImageElement) return;
+      if (node.querySelector(':scope > img[data-figma-export-image="true"]')) return;
+
+      const computed = window.getComputedStyle(node);
+      const background = computed.backgroundImage;
+      const sources = backgroundUrls(background);
+      if (sources.length !== 1 || /gradient\(/i.test(background)) return;
+
+      const source = sources[0];
+      if (!source || source.startsWith('data:')) return;
+
+      const image = document.createElement('img');
+      image.dataset.figmaExportImage = 'true';
+      image.className = 'figma-export-image';
+      image.alt = node.getAttribute('aria-label') || '';
+      image.loading = 'eager';
+      image.decoding = 'sync';
+      image.src = source;
+
+      const backgroundSize = computed.backgroundSize.trim();
+      image.style.objectFit = backgroundSize === 'contain' ? 'contain' : 'cover';
+      image.style.objectPosition = computed.backgroundPosition || '50% 50%';
+
+      if (computed.position === 'static') node.style.position = 'relative';
+      node.classList.add('figma-export-surface');
+      node.style.setProperty('background-image', 'none', 'important');
+
+      if (node.getAttribute('role') === 'img') {
+        node.removeAttribute('role');
+        node.removeAttribute('aria-label');
+      }
+
+      node.prepend(image);
+      preload(source);
+    });
+  };
+
   const warmComputedBackgrounds = (scope) => {
     const selector = [
       '[role="img"]',
@@ -93,6 +144,7 @@
   const prepare = (scope = document) => {
     hydrateDataBackgrounds(scope);
     hydrateImages(scope);
+    materializeEditableBackgrounds(scope);
     warmComputedBackgrounds(scope);
     revealForCapture(scope);
   };
@@ -109,6 +161,21 @@
         visibility: visible !important;
         animation: none !important;
         transition: none !important;
+      }
+
+      html[data-figma-capture="true"] .figma-export-surface {
+        overflow: hidden;
+      }
+
+      html[data-figma-capture="true"] .figma-export-image {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        display: block;
+        pointer-events: none;
       }
     `;
     document.head.appendChild(style);
