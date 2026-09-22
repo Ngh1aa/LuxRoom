@@ -5,6 +5,9 @@
     query.get('figma') === '1' ||
     navigator.webdriver === true ||
     /HeadlessChrome|Playwright|Puppeteer/i.test(userAgent);
+  const editableTextMode =
+    query.get('figma') === '1' &&
+    query.get('text') !== 'fidelity';
 
   const preloadCache = new Set();
   const preloadImages = [];
@@ -129,6 +132,27 @@
     });
   };
 
+  const normalizeEditableTypography = (scope) => {
+    if (!editableTextMode) return;
+
+    const selector = [
+      'h1',
+      'h2',
+      'h3',
+      '.brand',
+      '.footer-brand',
+      '.luxroom-wordmark'
+    ].join(',');
+
+    collect(scope, selector).forEach((node) => {
+      if (!(node instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(node);
+      if (!computed.fontFamily.toLowerCase().includes('newsreader')) return;
+      node.classList.add('figma-native-text-safe');
+      node.dataset.figmaOriginalFont = 'Newsreader';
+    });
+  };
+
   const revealForCapture = (scope) => {
     if (!captureMode) return;
     collect(scope, '.reveal, .motion-reveal').forEach((node) => {
@@ -145,6 +169,7 @@
     hydrateDataBackgrounds(scope);
     hydrateImages(scope);
     materializeEditableBackgrounds(scope);
+    normalizeEditableTypography(scope);
     warmComputedBackgrounds(scope);
     revealForCapture(scope);
   };
@@ -177,6 +202,26 @@
         display: block;
         pointer-events: none;
       }
+
+      /*
+       * dMaya can rasterize display typography when a web font cannot be
+       * recreated as a Figma text primitive. In Figma capture mode we prefer
+       * native/editable text over exact display-font fidelity. DM Sans is
+       * already used throughout LuxRoom UI copy and imports as native text.
+       * Production routes never receive this override.
+       */
+      html[data-figma-capture="true"] .figma-native-text-safe,
+      html[data-figma-capture="true"] .figma-native-text-safe * {
+        font-family: "DM Sans", Inter, Arial, sans-serif !important;
+        font-style: normal !important;
+        font-synthesis: none !important;
+      }
+
+      html[data-figma-capture="true"] h1.figma-native-text-safe,
+      html[data-figma-capture="true"] h2.figma-native-text-safe,
+      html[data-figma-capture="true"] h3.figma-native-text-safe {
+        font-weight: 400 !important;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -206,5 +251,11 @@
     requestAnimationFrame(() => requestAnimationFrame(() => prepare(document)));
   }, { once: true });
 
-  window.LuxRoomFigmaCompat = { prepare, captureMode };
+  window.LuxRoomFigmaCompat = {
+    prepare,
+    captureMode,
+    editableTextMode,
+    originalDisplayFont: 'Newsreader',
+    exportDisplayFont: 'DM Sans',
+  };
 })();
