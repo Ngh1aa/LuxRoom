@@ -22,7 +22,7 @@ runtimeImports.forEach((path) => {
 });
 
 if (params.get('figma') === '1') {
-  import('./figma-compat.js?v=20260911-1').catch((error) => {
+  import('./figma-compat.js?v=20260922-editable-media1').catch((error) => {
     console.warn('[LuxRoom] Figma compatibility layer failed to load.', error);
   });
 }

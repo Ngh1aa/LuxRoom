@@ -54,6 +54,12 @@ for (const match of pageCss.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
 ].forEach((token) => assert(css.includes(token), `Missing required responsive/design token: ${token}`));
 
 assert(html.includes('img/feedback/home-hero.jpg'), 'Missing image-led home hero asset');
+assert(!html.includes('data-bg="'), 'Home media should use native <img> elements instead of data-bg backgrounds');
+assert(!html.includes('style="background-image'), 'Home media should avoid inline background-image placeholders');
+assert((html.match(/class="product-image[^"]*">\s*<img/g) || []).length === 3, 'Featured products should expose three native editable image nodes');
+assert((html.match(/class="room-card-image">\s*<img/g) || []).length === 5, 'Room cards should expose five native editable image nodes');
+assert(/class="studio-image arch-frame">\s*<img/.test(html), 'Studio media should be a native editable image node');
+assert(/class="story-image">\s*<img/.test(html), 'Story media should be a native editable image node');
 assert(html.includes('products.html?room=Living'), 'Missing room-led discovery route');
 assert(html.includes('products.html'), 'Missing collection discovery route');
 assert(css.includes('grid-template-columns'), 'Missing intentional desktop composition grid');

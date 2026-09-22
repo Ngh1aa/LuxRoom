@@ -8,6 +8,7 @@ const init = await read('js/ui-feedback-init.js');
 const motion = await read('js/motion-system-v2.js');
 const checkout = await read('js/checkout.js');
 const productsPerformance = await read('js/products-performance.js');
+const figmaCompat = await read('js/figma-compat.js');
 
 const checks = [
   ['motion runtime loads independently', init.includes("import './motion-system-v2.js")],
@@ -15,6 +16,8 @@ const checks = [
   ['UI feedback tooling is opt-in', init.includes("params.get('feedback') === '1'")],
   ['public runtime does not statically import Figma tooling', !init.includes("import './figma-compat.js")],
   ['public runtime does not statically import feedback tooling', !init.includes("import { createUIFeedback }")],
+  ['Figma capture materializes simple CSS backgrounds as native image nodes', figmaCompat.includes('data-figma-export-image')],
+  ['Figma background materialization is capture-only', figmaCompat.includes('if (!captureMode) return;')],
   ['motion mutation work is globally batched via animation frame', motion.includes('decorationFrame = requestAnimationFrame(() => {')],
   ['motion mutation work runs once per frame instead of per node', motion.includes('decorateMotion(document)')],
   ['motion observer no longer rescans the full document on every mutation', !motion.includes('requestAnimationFrame(() => decorateMotion());')],
