@@ -148,8 +148,30 @@
       if (!(node instanceof HTMLElement)) return;
       const computed = window.getComputedStyle(node);
       if (!computed.fontFamily.toLowerCase().includes('newsreader')) return;
+
       node.classList.add('figma-native-text-safe');
       node.dataset.figmaOriginalFont = 'Newsreader';
+
+      /*
+       * dMaya rasterizes LuxRoom display copy when the heading contains rich
+       * inline structure such as <br>, <em> or nested spans. For capture mode,
+       * collapse that structure into one plain text node while preserving
+       * authored hard line breaks. This deliberately trades rich typography
+       * for native Figma editability; production markup is never modified.
+       */
+      if (!node.dataset.figmaPlainTextNormalized) {
+        const exportText = Array.from(node.childNodes)
+          .map((child) => child.nodeName === 'BR' ? '\n' : child.textContent || '')
+          .join('')
+          .replace(/\u00a0/g, ' ')
+          .trim();
+
+        if (exportText) {
+          node.textContent = exportText;
+          node.dataset.figmaPlainTextNormalized = 'true';
+          node.style.setProperty('white-space', 'pre-line', 'important');
+        }
+      }
     });
   };
 
@@ -215,6 +237,7 @@
         font-family: "DM Sans", Inter, Arial, sans-serif !important;
         font-style: normal !important;
         font-synthesis: none !important;
+        white-space: pre-line !important;
       }
 
       html[data-figma-capture="true"] h1.figma-native-text-safe,

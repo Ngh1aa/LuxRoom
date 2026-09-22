@@ -21,6 +21,8 @@ const checks = [
   ['Figma capture marks unsupported display typography for native-text fallback', figmaCompat.includes('figma-native-text-safe')],
   ['Figma capture uses the proven editable UI font for display-text fallback', figmaCompat.includes('exportDisplayFont: \'DM Sans\'')],
   ['Figma text fallback is opt-out for fidelity debugging', figmaCompat.includes("query.get('text') !== 'fidelity'")],
+  ['Figma capture collapses rich display headings into plain text nodes', figmaCompat.includes("node.textContent = exportText")],
+  ['Figma capture preserves authored heading line breaks', figmaCompat.includes("child.nodeName === 'BR' ? '\\n'")],
   ['motion mutation work is globally batched via animation frame', motion.includes('decorationFrame = requestAnimationFrame(() => {')],
   ['motion mutation work runs once per frame instead of per node', motion.includes('decorateMotion(document)')],
   ['motion observer no longer rescans the full document on every mutation', !motion.includes('requestAnimationFrame(() => decorateMotion());')],
