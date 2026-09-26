@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "build": "node scripts/build-dist.mjs",
     "qa": "node scripts/qa-home.mjs && node scripts/qa-product-detail.mjs && node scripts/qa-commerce-data.mjs && node scripts/qa-commerce-flow.mjs && node scripts/qa-all-pages.mjs && node scripts/qa-purchase-confidence.mjs && node scripts/qa-motion-upgrade.mjs && node scripts/qa-runtime-performance.mjs && node scripts/qa-figma-12.mjs",
     "qa:confidence": "node scripts/qa-purchase-confidence.mjs",
     "qa:motion": "node scripts/qa-motion-upgrade.mjs",
