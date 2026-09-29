@@ -48,6 +48,8 @@ jobs:
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
         run: node qa/capture.mjs
+      - name: Senior commerce rendered gate
+        run: node qa/senior-commerce-browser.mjs
       - name: Build visual contact sheets
         run: |
           python3 - <<'PY'
