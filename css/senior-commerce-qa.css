@@ -1,0 +1,44 @@
+/* Senior ecommerce product QA — 2026-09-29
+   Corrects decision-affordance and mobile containment defects without changing
+   LuxRoom's editorial art direction. */
+
+/* Technical drawings stay inside the PDP column on small screens. Dimensions
+   are already repeated as accessible text, so the drawing can scale instead of
+   forcing the document itself wider than the viewport. */
+.technical-drawing {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .technical-drawing {
+    overflow: hidden;
+  }
+
+  .technical-drawing svg {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Empty-cart checkout remains discoverable for assistive technology but must
+   not visually promise an available action. JS also blocks activation and
+   switches the action copy to explain the next step. */
+.btn-checkout.is-disabled,
+.btn-checkout[aria-disabled="true"] {
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--stone);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-checkout.is-disabled:hover,
+.btn-checkout.is-disabled:focus-visible,
+.btn-checkout[aria-disabled="true"]:hover,
+.btn-checkout[aria-disabled="true"]:focus-visible {
+  background: transparent;
+  color: var(--stone);
+  border-color: var(--stone);
+}
