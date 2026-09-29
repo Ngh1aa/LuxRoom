@@ -10,6 +10,11 @@ on:
       - main
     paths-ignore:
       - 'qa/evidence/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'qa/evidence/**'
   workflow_dispatch:
 
 permissions:
@@ -43,6 +48,8 @@ jobs:
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
         run: node qa/capture.mjs
+      - name: Senior commerce rendered gate
+        run: node qa/senior-commerce-browser.mjs
       - name: Build visual contact sheets
         run: |
           python3 - <<'PY'
@@ -99,6 +106,7 @@ jobs:
           path: qa/evidence/
           if-no-files-found: error
       - name: Commit compact evidence
+        if: github.event_name == 'push'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '4189821+github-actions[bot]@users.noreply.github.com'

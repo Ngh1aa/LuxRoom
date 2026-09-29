@@ -76,6 +76,11 @@
 .d-values p { max-width: 350px; margin: 0; color: var(--stone); font-size: var(--text-sm); line-height: 1.65; }
 
 .d-spec { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr); gap: clamp(50px,8vw,130px); align-items: center; padding-block: var(--section-y); }
+/* Grid children must be allowed to shrink below intrinsic content width when the
+   specification section collapses to one column. Without this, the accordion
+   can preserve a desktop min-content width and push the 390px PDP to 576px. */
+.d-spec > *,.spec-accordions,.acc-item,.acc-body,.material-list,.material-list > div { min-width: 0; }
+.acc-head,.acc-body p,.material-list dd,.measure-guide p { overflow-wrap: anywhere; }
 .spec-accordions > .section-label { display: block; margin-bottom: 12px; }
 .spec-accordions > h2 { margin: 0 0 30px; font-size: clamp(2.8rem,4.8vw,5.4rem); }
 .acc-item { border-top: 1px solid var(--hairline); }
@@ -87,7 +92,7 @@
 .acc-open .acc-body { display: block; }
 .acc-body p { color: var(--stone); line-height: 1.72; }
 .material-list { display: grid; gap: 10px; margin: 0; }
-.material-list > div { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 8px 0; border-bottom: 1px dotted var(--hairline); }
+.material-list > div { display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 16px; padding: 8px 0; border-bottom: 1px dotted var(--hairline); }
 .material-list dt { color: var(--ink); font-size: var(--text-xs); font-weight: 600; }
 .material-list dd { margin: 0; color: var(--stone); font-size: var(--text-sm); }
 .care-list { margin: 0; padding-left: 18px; color: var(--stone); }
@@ -152,7 +157,7 @@
   .d-values article { min-height: auto; padding: 26px 0; border-right: 0; border-bottom: 1px solid var(--hairline); }
   .d-values article:last-child { border-bottom: 0; }
   .d-values h2 { margin: 16px 0 8px; }
-  .d-spec,.fit-consultation,.related-edit { grid-template-columns: 1fr; }
+  .d-spec,.fit-consultation,.related-edit { grid-template-columns: minmax(0,1fr); }
   .spec-img { order: -1; min-height: 70vw; }
   .fit-consultation { gap: 24px; }
   .related-grid { grid-template-columns: 1fr 1fr; }
@@ -172,18 +177,19 @@
   .d-gallery { width: calc(100% + 32px); margin-left: -16px; gap: 6px; }
   .dg-img { border-left: 0; border-right: 0; min-height: 28vw; }
   .dg-img:first-child { min-height: 62vw; }
-  .media-evidence-strip { min-height: 58px; grid-template-columns: 10px 1fr auto; padding: 10px 0; }
-  .media-evidence-strip p { font-size: .7rem; line-height: 1.4; }
-  .media-evidence-strip a { grid-column: auto; align-self: center; font-size: .62rem; }
+  .media-evidence-strip { min-height: 58px; grid-template-columns: 10px minmax(0,1fr); padding: 10px 0; }
+  .media-evidence-strip a { grid-column: 2; justify-self: start; align-self: center; font-size: .62rem; white-space: normal; }
+  .media-evidence-strip p { min-width: 0; font-size: .7rem; line-height: 1.4; overflow-wrap: anywhere; }
   .di-kicker { align-items: center; flex-direction: row; gap: 7px; padding-bottom: 10px; }
   .di-header { grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding-top: 16px; }
   .di-title { font-size: clamp(2.8rem,13vw,4.4rem); }
   .di-price { font-size: 1.35rem; }
-  .decision-facts > div { grid-template-columns: 92px 1fr; }
+  .decision-facts > div { grid-template-columns: 92px minmax(0,1fr); }
   .finish-options { grid-template-columns: 1fr; }
   .arrival-note-heading { flex-direction: column; }
   .arrival-note-heading label,.arrival-note select { width: 100%; max-width: none; }
-  .di-actions { grid-template-columns: 102px 1fr; }
+  .di-actions { grid-template-columns: 102px minmax(0,1fr); }
+  .material-list > div { grid-template-columns: minmax(88px,112px) minmax(0,1fr); gap: 12px; }
   .dimension-visual { min-height: 225px; }
   .fit-consultation { padding: 30px 22px; }
   .fit-consultation h2 { font-size: 2.8rem; }
