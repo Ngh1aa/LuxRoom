@@ -22,7 +22,7 @@ const checks = [
   ['empty state has semantic evidence', files.runtime.includes('data-state-evidence="empty"')],
   ['loading state has semantic evidence', files.runtime.includes('data-state-evidence="loading"') && files.runtime.includes("aria-busy', String(state === 'loading')")],
   ['error state is recoverable', files.runtime.includes('data-state-evidence="error"') && files.runtime.includes('data-collection-retry')],
-  ['success state exposes next action', files.runtime.includes('data-state-evidence="success"') && files.runtime.includes('Review cart')],
+  ['success state exposes next action', files.runtime.includes("notice.dataset.stateEvidence = 'success'") && files.runtime.includes('Review cart')],
   ['checkout preserves and reports invalid input', files.runtime.includes("form.addEventListener('invalid'") && files.runtime.includes('Your entered information has been kept')],
   ['checkout exposes submitting state', files.runtime.includes("form.setAttribute('aria-busy', 'true')") && files.runtime.includes('Placing order…')],
   ['checkout has recoverable storage failure', files.runtime.includes('This browser cannot save the order yet')],
