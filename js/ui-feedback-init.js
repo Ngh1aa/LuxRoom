@@ -3,6 +3,7 @@ import './motion-system-v2.js?v=20260917-sitewide1';
 const params = new URLSearchParams(window.location.search);
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 const isCollectionPage = currentPage === 'products.html';
+const isCommerceDecisionPage = ['detail.html', 'cart.html', 'checkout.html', 'success.html'].includes(currentPage);
 
 /* Keep public production routes lean. Design/debug tooling is opt-in via query
    parameters so Figma/UI-feedback observers cannot affect normal browsing. */
@@ -13,6 +14,9 @@ const runtimeImports = [
 
 if (isCollectionPage) {
   runtimeImports.push('./products-performance.js?v=20260917-2');
+}
+if (isCommerceDecisionPage) {
+  runtimeImports.push('./senior-commerce-depth.js?v=20260929-1');
 }
 
 runtimeImports.forEach((path) => {
