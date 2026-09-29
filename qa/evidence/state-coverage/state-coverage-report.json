@@ -1,0 +1,202 @@
+{
+  "generatedAt": "2026-09-29T14:58:56.412Z",
+  "base": "http://127.0.0.1:8765",
+  "passed": true,
+  "report": [
+    {
+      "state": "empty",
+      "viewport": "desktop",
+      "route": "recruiter-state-lab.html?state=empty&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "resetControl": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "empty",
+      "viewport": "tablet",
+      "route": "recruiter-state-lab.html?state=empty&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "resetControl": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "empty",
+      "viewport": "mobile",
+      "route": "recruiter-state-lab.html?state=empty&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "resetControl": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "loading",
+      "viewport": "desktop",
+      "route": "recruiter-state-lab.html?state=loading&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "ariaBusy": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "loading",
+      "viewport": "tablet",
+      "route": "recruiter-state-lab.html?state=loading&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "ariaBusy": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "loading",
+      "viewport": "mobile",
+      "route": "recruiter-state-lab.html?state=loading&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "ariaBusy": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "error",
+      "viewport": "desktop",
+      "route": "recruiter-state-lab.html?state=error&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "alertRole": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "error",
+      "viewport": "tablet",
+      "route": "recruiter-state-lab.html?state=error&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "alertRole": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "error",
+      "viewport": "mobile",
+      "route": "recruiter-state-lab.html?state=error&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "alertRole": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "success",
+      "viewport": "desktop",
+      "route": "recruiter-state-lab.html?state=success&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "statusRole": true,
+        "cartNextStep": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "success",
+      "viewport": "tablet",
+      "route": "recruiter-state-lab.html?state=success&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "statusRole": true,
+        "cartNextStep": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "success",
+      "viewport": "mobile",
+      "route": "recruiter-state-lab.html?state=success&pin=1",
+      "assertions": {
+        "stateVisible": true,
+        "primaryText": true,
+        "actionText": true,
+        "statusRole": true,
+        "cartNextStep": true,
+        "outerNoHorizontalOverflow": true,
+        "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    }
+  ]
+}
