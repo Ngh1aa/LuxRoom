@@ -9,6 +9,7 @@ const isCollectionPage = currentPage === 'products.html';
 const runtimeImports = [
   './navigation-routes.js?v=20260901-rooms',
   './confidence-layer.js?v=20260914-1',
+  './senior-commerce-v1.js?v=20260929',
 ];
 
 if (isCollectionPage) {
