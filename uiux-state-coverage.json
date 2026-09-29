@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "name": "LuxRoom senior commerce lifecycle states",
+  "entry_route": "/recruiter-state-lab.html",
+  "frame_selector": "#productFrame",
+  "viewports": [
+    { "name": "desktop-1440", "width": 1440, "height": 1000 },
+    { "name": "tablet-768", "width": 768, "height": 1024 },
+    { "name": "mobile-390", "width": 390, "height": 844 }
+  ],
+  "states": [
+    {
+      "id": "empty",
+      "label": "Empty",
+      "scope": "iframe",
+      "query": { "state": "empty", "pin": 1 },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-evidence=\"empty\"]" },
+        { "type": "text", "selector": "[data-state-evidence=\"empty\"]", "text": "No objects match this combination" },
+        { "type": "text", "selector": "[data-state-evidence=\"empty\"]", "text": "Reset the edit" }
+      ],
+      "focus": "[data-state-evidence=\"empty\"]"
+    },
+    {
+      "id": "loading",
+      "label": "Loading",
+      "scope": "iframe",
+      "query": { "state": "loading", "pin": 1 },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-evidence=\"loading\"]" },
+        { "type": "text", "selector": "[data-state-evidence=\"loading\"]", "text": "Loading collection" },
+        { "type": "attribute", "selector": "#product-grid", "attribute": "aria-busy", "equals": "true" }
+      ],
+      "focus": "[data-state-evidence=\"loading\"]"
+    },
+    {
+      "id": "error",
+      "label": "Error",
+      "scope": "iframe",
+      "query": { "state": "error", "pin": 1 },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-evidence=\"error\"]" },
+        { "type": "text", "selector": "[data-state-evidence=\"error\"]", "text": "We couldn't refresh the collection" },
+        { "type": "text", "selector": "[data-state-evidence=\"error\"]", "text": "Retry collection" }
+      ],
+      "focus": "[data-state-evidence=\"error\"]"
+    },
+    {
+      "id": "success",
+      "label": "Success",
+      "scope": "iframe",
+      "query": { "state": "success", "pin": 1 },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-evidence=\"success\"]" },
+        { "type": "text", "selector": "[data-state-evidence=\"success\"]", "text": "Added to cart" },
+        { "type": "text", "selector": "[data-state-evidence=\"success\"]", "text": "Review cart" }
+      ],
+      "focus": "[data-state-evidence=\"success\"]"
+    }
+  ],
+  "matrix": {
+    "states": ["empty", "loading", "error", "success"],
+    "columns": 2,
+    "viewport": "desktop-1440"
+  }
+}
