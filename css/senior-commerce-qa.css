@@ -2,20 +2,26 @@
    Corrects decision-affordance and mobile containment defects without changing
    LuxRoom's editorial art direction. */
 
-/* Technical drawings stay inside the PDP column on small screens. Dimensions
-   are already repeated as accessible text, so the drawing can scale instead of
-   forcing the document itself wider than the viewport. */
+/* CSS Grid children default to min-width:auto. The technical drawing has an
+   intentional wide intrinsic canvas, so without a zero min-size the entire
+   specification column expands to 560px on a 390px viewport. Keep the grid
+   item shrinkable and contain the drawing within the decision-evidence column. */
+.d-spec > .spec-accordions,
+.spec-accordions,
 .technical-drawing {
   min-width: 0;
   max-width: 100%;
 }
 
 @media (max-width: 520px) {
-  .technical-drawing {
+  .spec-accordions .technical-drawing {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
   }
 
-  .technical-drawing svg {
+  body .spec-accordions .technical-drawing svg {
     width: 100%;
     min-width: 0;
     max-width: 100%;
