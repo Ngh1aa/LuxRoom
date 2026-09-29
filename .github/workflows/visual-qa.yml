@@ -44,6 +44,8 @@ jobs:
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
         run: node qa/capture.mjs
+      - name: Verify PDP mobile containment
+        run: node qa/detail-mobile-regression.mjs
       - name: Enforce rendered runtime quality gate
         run: node qa/assert-runtime.mjs
       - name: Build visual contact sheets
@@ -96,6 +98,7 @@ jobs:
           Path('qa/evidence/runtime-report.json').write_text(json.dumps(report,indent=2))
           PY
       - name: Upload full visual evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: luxroom-visual-qa
