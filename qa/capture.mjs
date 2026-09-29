@@ -74,6 +74,9 @@ async function capture(name, route, viewport, action) {
     if (metrics.scrollWidth > metrics.clientWidth + 2) {
       throw new Error(`${name}: horizontal overflow ${metrics.scrollWidth}/${metrics.clientWidth}`);
     }
+    if (errors.length || failedResponses.length) {
+      throw new Error(`${name}: runtime/resource errors\n${JSON.stringify({ errors, failedResponses }, null, 2)}`);
+    }
     console.log(`capture:done ${name}`);
   } finally {
     await context.close();
