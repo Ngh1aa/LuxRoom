@@ -44,9 +44,6 @@ async function capture(name, route, viewport, action) {
     if (action) await action(page);
     await page.waitForTimeout(120);
 
-    // Viewport captures are intentional. Full-page screenshots can stall Chrome on
-    // long commerce pages and are unnecessary because the contact sheets inspect
-    // representative route/state frames rather than a single giant scroll image.
     await page.screenshot({
       path: `${out}/${name}.png`,
       fullPage: false,
@@ -74,6 +71,9 @@ async function capture(name, route, viewport, action) {
     });
 
     await fs.writeFile(`${out}/${name}.json`, JSON.stringify({ ...metrics, errors, failedResponses }, null, 2));
+    if (metrics.scrollWidth > metrics.clientWidth + 2) {
+      throw new Error(`${name}: horizontal overflow ${metrics.scrollWidth}/${metrics.clientWidth}`);
+    }
     console.log(`capture:done ${name}`);
   } finally {
     await context.close();
