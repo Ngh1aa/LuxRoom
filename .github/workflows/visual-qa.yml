@@ -7,6 +7,7 @@ on:
       - uiux/header-rooms-navigation
       - uiux/rooms-page-hero-fix
       - feat/luxroom-motion-upgrade
+      - uiux/senior-ecommerce-state-coverage
       - main
     paths-ignore:
       - 'qa/evidence/**'
@@ -39,6 +40,8 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/luxroom-server.log 2>&1 &
           echo $! > /tmp/luxroom-server.pid
           sleep 2
+      - name: Run senior commerce state coverage
+        run: node qa/state-coverage.mjs
       - name: Run motion behavior QA
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
@@ -102,7 +105,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '4189821+github-actions[bot]@users.noreply.github.com'
-          git add qa/evidence/contact-desktop.jpg qa/evidence/contact-mobile.jpg qa/evidence/runtime-report.json
+          git add qa/evidence/contact-desktop.jpg qa/evidence/contact-mobile.jpg qa/evidence/runtime-report.json qa/evidence/state-coverage/state-coverage-report.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'qa: update rendered visual evidence'
           git push
