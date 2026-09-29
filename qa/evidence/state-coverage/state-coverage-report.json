@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-29T14:58:56.412Z",
+  "generatedAt": "2026-09-29T15:01:15.815Z",
   "base": "http://127.0.0.1:8765",
   "passed": true,
   "report": [
@@ -193,6 +193,23 @@
         "cartNextStep": true,
         "outerNoHorizontalOverflow": true,
         "innerNoHorizontalOverflow": true
+      },
+      "errors": [],
+      "failedResponses": [],
+      "pass": true
+    },
+    {
+      "state": "checkout-critical-action",
+      "viewport": "desktop",
+      "route": "products → checkout → success",
+      "assertions": {
+        "invalidSummaryVisible": true,
+        "invalidFieldMarked": true,
+        "loadingStatusVisible": true,
+        "formBusy": true,
+        "submitBusy": true,
+        "confirmationReached": true,
+        "cartClearedAfterSuccess": true
       },
       "errors": [],
       "failedResponses": [],
