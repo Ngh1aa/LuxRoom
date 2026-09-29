@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Inspect LuxRoom commerce lifecycle states: empty, loading, recoverable error and success." />
+  <title>LuxRoom | Commerce State Lab</title>
+  <link rel="icon" type="image/svg+xml" href="img/logo/luxroom-mark.svg" />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/state-lab.css?v=20260929-1" />
+</head>
+<body class="state-lab-page">
+  <header class="state-lab-nav">
+    <a class="brand" href="index.html" aria-label="LuxRoom home"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
+    <a href="products.html">Open collection <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main class="state-lab-shell">
+    <section class="state-lab-intro" aria-labelledby="state-lab-title">
+      <div>
+        <p class="object-index">Prototype proof / commerce lifecycle</p>
+        <h1 id="state-lab-title">The states<br />between <em>screens.</em></h1>
+      </div>
+      <div class="state-lab-intro-copy">
+        <p>Senior product work is visible when the happy path stops. This lab exposes four critical e-commerce states without asking a reviewer to manufacture them manually.</p>
+        <dl>
+          <div><dt>Scope</dt><dd>Collection discovery</dd></div>
+          <div><dt>Evidence</dt><dd>Rendered + interactive</dd></div>
+          <div><dt>Recovery</dt><dd>Actionable, no dead ends</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="state-lab-controls" aria-label="Choose commerce state">
+      <button type="button" data-state-option="empty" aria-pressed="false"><span>01</span><strong>Empty</strong><small>Zero result + recovery</small></button>
+      <button type="button" data-state-option="loading" aria-pressed="false"><span>02</span><strong>Loading</strong><small>Skeleton + busy feedback</small></button>
+      <button type="button" data-state-option="error" aria-pressed="false"><span>03</span><strong>Error</strong><small>Failure + retry</small></button>
+      <button type="button" data-state-option="success" aria-pressed="false"><span>04</span><strong>Success</strong><small>Confirmation + next step</small></button>
+    </section>
+
+    <section class="state-lab-stage" aria-labelledby="state-lab-active">
+      <header class="state-lab-stage-head">
+        <div><span class="clay-point" aria-hidden="true"></span><p>Active state</p></div>
+        <div><h2 id="state-lab-active">Empty</h2><p id="state-lab-description">A filtered collection with a useful recovery path instead of a blank grid.</p></div>
+        <p class="state-lab-note">Error is intentionally simulated for portfolio QA. Empty, loading and success mirror the same runtime components used by the collection experience.</p>
+      </header>
+      <div class="state-lab-frame-shell">
+        <div class="state-lab-browser-bar" aria-hidden="true"><span></span><span></span><span></span><p>luxroom / collection / state</p></div>
+        <iframe id="productFrame" title="LuxRoom collection state preview" loading="eager"></iframe>
+      </div>
+    </section>
+
+    <section class="state-lab-principles" aria-labelledby="state-principles-title">
+      <div><p class="object-index">Product design / state contract</p><h2 id="state-principles-title">What this proves.</h2></div>
+      <div class="state-lab-principle-grid">
+        <article><span>01</span><h3>Status is perceivable</h3><p>Loading and failure use semantic status/alert feedback, not colour alone.</p></article>
+        <article><span>02</span><h3>Context survives failure</h3><p>Error recovery does not throw away filters, entered checkout data or the user's place in the journey.</p></article>
+        <article><span>03</span><h3>Next action is explicit</h3><p>Empty, error and success each answer the same question: what can I do now?</p></article>
+        <article><span>04</span><h3>Touch and keyboard count</h3><p>Interactive affordances use native controls, visible focus and minimum mobile targets.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/recruiter-state-lab.js?v=20260929-1"></script>
+</body>
+</html>
