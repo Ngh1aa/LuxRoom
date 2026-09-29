@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "name": "LuxRoom senior commerce lifecycle",
+  "entry_route": "/recruiter-state-lab.html",
+  "frame_selector": "#frame",
+  "states": [
+    {
+      "id": "normal",
+      "label": "Normal",
+      "scope": "iframe",
+      "query": { "state": "normal" },
+      "assertions": []
+    },
+    {
+      "id": "empty",
+      "label": "Empty Cart",
+      "scope": "iframe",
+      "query": { "state": "empty" },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-lab-marker=\"empty\"]" },
+        { "type": "text", "text": "Your room starts with one considered object." }
+      ],
+      "focus": "[data-state-lab-marker=\"empty\"]"
+    },
+    {
+      "id": "loading",
+      "label": "Media Loading",
+      "scope": "iframe",
+      "query": { "state": "loading" },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-lab-marker=\"loading\"]" },
+        { "type": "text", "text": "Loading room-scale imagery" }
+      ],
+      "focus": "[data-state-lab-marker=\"loading\"]"
+    },
+    {
+      "id": "error",
+      "label": "Checkout Error",
+      "scope": "iframe",
+      "query": { "state": "error" },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-lab-marker=\"error\"]" },
+        { "type": "text", "text": "We could not record the order." }
+      ],
+      "focus": "[data-state-lab-marker=\"error\"]"
+    },
+    {
+      "id": "edge",
+      "label": "Made-to-order Edge",
+      "scope": "iframe",
+      "query": { "state": "edge" },
+      "assertions": [
+        { "type": "selector", "selector": "[data-state-lab-marker=\"edge\"]" },
+        { "type": "text", "text": "Made to order" }
+      ],
+      "focus": "[data-state-lab-marker=\"edge\"]"
+    }
+  ],
+  "matrix": {
+    "states": ["empty", "loading", "error", "edge"],
+    "columns": 2,
+    "viewport": "desktop-1440",
+    "output": "state-coverage/luxroom-senior-commerce-matrix.png"
+  }
+}
