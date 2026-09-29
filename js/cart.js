@@ -7,6 +7,20 @@ const continueShopping = document.querySelector(".back-to-edit");
 const checkoutLink = document.querySelector(".btn-checkout");
 const deliveryLocation = document.querySelector("#cart-delivery-location");
 
+function syncCheckoutAvailability(items) {
+  if (!checkoutLink) return;
+  const isEmpty = items.length === 0;
+  checkoutLink.classList.toggle("is-disabled", isEmpty);
+  checkoutLink.setAttribute("aria-disabled", String(isEmpty));
+  checkoutLink.setAttribute(
+    "aria-label",
+    isEmpty ? "Add a piece before continuing to checkout" : "Continue to checkout",
+  );
+  checkoutLink.innerHTML = isEmpty
+    ? 'Add a piece to continue <span aria-hidden="true">↗</span>'
+    : 'Continue to checkout <span aria-hidden="true">↗</span>';
+}
+
 function renderCart() {
   const items = window.LuxRoom.cartItems || [];
   const totals = window.LuxRoom.getCartTotals();
@@ -25,10 +39,7 @@ function renderCart() {
     window.LuxRoomMotion?.flashPrice(totalNode);
   }
   if (deliveryLocation) deliveryLocation.value = window.LuxRoom.deliveryPreferences.location;
-  if (checkoutLink) {
-    checkoutLink.classList.toggle("is-disabled", items.length === 0);
-    checkoutLink.setAttribute("aria-disabled", String(items.length === 0));
-  }
+  syncCheckoutAvailability(items);
 
   if (!cartContainer) return;
   if (!items.length) {

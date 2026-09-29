@@ -7,6 +7,7 @@ on:
       - uiux/header-rooms-navigation
       - uiux/rooms-page-hero-fix
       - feat/luxroom-motion-upgrade
+      - 'fix/**'
       - main
     paths-ignore:
       - 'qa/evidence/**'
@@ -43,6 +44,10 @@ jobs:
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
         run: node qa/capture.mjs
+      - name: Verify PDP mobile containment
+        run: node qa/detail-mobile-regression.mjs
+      - name: Enforce rendered runtime quality gate
+        run: node qa/assert-runtime.mjs
       - name: Build visual contact sheets
         run: |
           python3 - <<'PY'
@@ -93,12 +98,14 @@ jobs:
           Path('qa/evidence/runtime-report.json').write_text(json.dumps(report,indent=2))
           PY
       - name: Upload full visual evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: luxroom-visual-qa
           path: qa/evidence/
           if-no-files-found: error
       - name: Commit compact evidence
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '4189821+github-actions[bot]@users.noreply.github.com'

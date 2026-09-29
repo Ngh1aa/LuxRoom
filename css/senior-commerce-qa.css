@@ -1,0 +1,50 @@
+/* Senior ecommerce product QA — 2026-09-29
+   Corrects decision-affordance and mobile containment defects without changing
+   LuxRoom's editorial art direction. */
+
+/* CSS Grid children default to min-width:auto. The technical drawing has an
+   intentional wide intrinsic canvas, so without a zero min-size the entire
+   specification column expands to 560px on a 390px viewport. Keep the grid
+   item shrinkable and contain the drawing within the decision-evidence column. */
+.d-spec > .spec-accordions,
+.spec-accordions,
+.technical-drawing {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .spec-accordions .technical-drawing {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  body .spec-accordions .technical-drawing svg {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Empty-cart checkout remains discoverable for assistive technology but must
+   not visually promise an available action. JS also blocks activation and
+   switches the action copy to explain the next step. */
+.btn-checkout.is-disabled,
+.btn-checkout[aria-disabled="true"] {
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--stone);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-checkout.is-disabled:hover,
+.btn-checkout.is-disabled:focus-visible,
+.btn-checkout[aria-disabled="true"]:hover,
+.btn-checkout[aria-disabled="true"]:focus-visible {
+  background: transparent;
+  color: var(--stone);
+  border-color: var(--stone);
+}

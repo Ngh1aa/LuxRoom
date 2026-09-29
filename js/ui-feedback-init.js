@@ -21,6 +21,23 @@ runtimeImports.forEach((path) => {
   });
 });
 
+/* Senior commerce QA layer: loaded after runtime modules so the product-level
+   fixes own the final cascade without mutating the existing art direction. */
+function ensureSeniorCommerceQaStyles() {
+  if (document.querySelector('link[data-luxroom-senior-commerce-qa]')) return;
+  const stylesheet = document.createElement('link');
+  stylesheet.rel = 'stylesheet';
+  stylesheet.href = 'css/senior-commerce-qa.css?v=20260929-1';
+  stylesheet.dataset.luxroomSeniorCommerceQa = 'true';
+  document.head.appendChild(stylesheet);
+}
+
+if (document.readyState === 'complete') {
+  ensureSeniorCommerceQaStyles();
+} else {
+  window.addEventListener('load', ensureSeniorCommerceQaStyles, { once: true });
+}
+
 if (params.get('figma') === '1') {
   import('./figma-compat.js?v=20260922-plain-heading1').catch((error) => {
     console.warn('[LuxRoom] Figma compatibility layer failed to load.', error);
