@@ -68,6 +68,26 @@
     "failedResponses": []
   },
   {
+    "capture": "cart-seeded-configuration-desktop",
+    "productId": 8,
+    "variantId": "8-2",
+    "finish": "Olive boucl\u00e9",
+    "editHref": "detail.html?product=8&variant=8-2",
+    "restoredVariant": true,
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 404 (File not found)"
+    ]
+  },
+  {
+    "capture": "cart-seeded-configuration-mobile",
+    "productId": 8,
+    "variantId": "8-2",
+    "finish": "Olive boucl\u00e9",
+    "editHref": "detail.html?product=8&variant=8-2",
+    "restoredVariant": true,
+    "errors": []
+  },
+  {
     "capture": "checkout-desktop",
     "title": "LuxRoom | Checkout",
     "pageClass": "checkout-page lux-motion-ready",
@@ -100,6 +120,24 @@
     "fitStatus": null,
     "errors": [],
     "failedResponses": []
+  },
+  {
+    "capture": "checkout-seeded-configuration-desktop",
+    "productId": 8,
+    "variantId": "8-2",
+    "finish": "Olive boucl\u00e9",
+    "editHref": "detail.html?product=8&variant=8-2",
+    "restoredVariant": true,
+    "errors": []
+  },
+  {
+    "capture": "checkout-seeded-configuration-mobile",
+    "productId": 8,
+    "variantId": "8-2",
+    "finish": "Olive boucl\u00e9",
+    "editHref": "detail.html?product=8&variant=8-2",
+    "restoredVariant": true,
+    "errors": []
   },
   {
     "capture": "collection-desktop",

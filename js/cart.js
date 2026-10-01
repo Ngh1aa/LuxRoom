@@ -7,6 +7,14 @@ const continueShopping = document.querySelector(".back-to-edit");
 const checkoutLink = document.querySelector(".btn-checkout");
 const deliveryLocation = document.querySelector("#cart-delivery-location");
 
+function configurationUrl(item) {
+  const params = new URLSearchParams({
+    product: String(item.productId),
+    variant: String(item.variantId),
+  });
+  return `detail.html?${params.toString()}`;
+}
+
 function renderCart() {
   const items = window.LuxRoom.cartItems || [];
   const totals = window.LuxRoom.getCartTotals();
@@ -43,6 +51,7 @@ function renderCart() {
             <h3>${item.name}</h3>
             <p class="cart-item-variant">${item.finish} · ${item.material}</p>
             <p class="cart-item-meta">Estimated arrival ${arrival}</p>
+            <a class="cart-edit-configuration" href="${configurationUrl(item)}">Edit configuration <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         <div class="cart-qty cart-item-quantity" aria-label="Quantity for ${item.name}">

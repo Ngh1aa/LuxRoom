@@ -1,6 +1,8 @@
-const productQuery = new URLSearchParams(window.location.search).get("product");
+const detailParams = new URLSearchParams(window.location.search);
+const productQuery = detailParams.get("product");
+const variantQuery = detailParams.get("variant");
 const selectedProduct = window.LuxRoom.getProduct(Number(productQuery)) || window.LuxRoom.products[0];
-let selectedVariant = selectedProduct.variants[0];
+let selectedVariant = window.LuxRoom.getVariant(selectedProduct, variantQuery);
 let selectedGallery = selectedVariant.images.slice(0, 3);
 let selectedQuantity = 1;
 
@@ -35,6 +37,13 @@ const nodes = {
 };
 
 const galleryButtons = Array.from(document.querySelectorAll("[data-gallery-image]"));
+
+function syncVariantUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("product", String(selectedProduct.id));
+  url.searchParams.set("variant", selectedVariant.variantId);
+  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
 
 function dimensionSummary(product) {
   const { width, depth, height } = product.dimensions;
@@ -120,6 +129,7 @@ function updateVariantDetails() {
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   });
+  syncVariantUrl();
   updateGallery();
   updateDelivery();
 }
@@ -162,10 +172,13 @@ function setupGallery() {
 
 function setupFinishes() {
   if (!nodes.finishOptions) return;
-  nodes.finishOptions.innerHTML = selectedProduct.variants.map((variant, index) => `
-    <button type="button" class="finish-option${index === 0 ? " active" : ""}" data-variant-id="${variant.variantId}" data-finish="${variant.finish}" aria-pressed="${index === 0}">
+  nodes.finishOptions.innerHTML = selectedProduct.variants.map((variant) => {
+    const isActive = variant.variantId === selectedVariant.variantId;
+    return `
+    <button type="button" class="finish-option${isActive ? " active" : ""}" data-variant-id="${variant.variantId}" data-finish="${variant.finish}" aria-pressed="${isActive}">
       <span class="swatch" style="background:${variant.swatch}" aria-hidden="true"></span>${variant.finish}
-    </button>`).join("");
+    </button>`;
+  }).join("");
   nodes.finishOptions.addEventListener("click", (event) => {
     const button = event.target.closest(".finish-option[data-variant-id]");
     if (!button) return;
