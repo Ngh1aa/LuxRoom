@@ -44,6 +44,8 @@ jobs:
         run: node qa/motion-check.mjs
       - name: Capture representative routes and states
         run: node qa/capture.mjs
+      - name: Capture seeded configuration recovery states
+        run: node qa/capture-commerce-proof.mjs
       - name: Build visual contact sheets
         run: |
           python3 - <<'PY'
