@@ -18,6 +18,14 @@ const locationByProvince = {
 };
 const provinceByLocation = Object.fromEntries(Object.entries(locationByProvince).map(([province, location]) => [location, province]));
 
+function configurationUrl(item) {
+  const params = new URLSearchParams({
+    product: String(item.productId),
+    variant: String(item.variantId),
+  });
+  return `detail.html?${params.toString()}`;
+}
+
 function selectedRadioValue(name) {
   return checkoutForm?.querySelector(`input[name="${name}"]:checked`)?.value || "";
 }
@@ -40,7 +48,7 @@ function renderCheckoutSummary() {
       ? items.map((item) => `
         <div class="summary-item">
           <span class="summary-item-img" style="background-image:url('${item.image}')" role="img" aria-label="${item.name} in ${item.finish}"></span>
-          <span class="summary-item-details"><strong>${item.name}</strong><small>${item.finish} · Qty ${item.quantity}</small></span>
+          <span class="summary-item-details"><strong>${item.name}</strong><small>${item.finish} · Qty ${item.quantity}</small><a class="summary-edit-configuration" href="${configurationUrl(item)}">Edit configuration <span aria-hidden="true">↗</span></a></span>
           <span class="summary-item-price">${window.LuxRoom.formatMoney(item.price * item.quantity)}</span>
         </div>`).join("")
       : '<div class="summary-empty"><strong>Nothing selected yet.</strong><a href="products.html">Explore pieces <span aria-hidden="true">↗</span></a></div>';
