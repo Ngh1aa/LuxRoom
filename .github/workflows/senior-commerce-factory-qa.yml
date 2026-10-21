@@ -1,0 +1,29 @@
+name: Senior Commerce Factory QA
+
+on:
+  pull_request:
+    paths:
+      - "detail.html"
+      - "cart.html"
+      - "checkout.html"
+      - "recruiter-state-lab.html"
+      - "uiux-state-coverage.json"
+      - "js/**"
+      - "css/**"
+      - ".github/workflows/senior-commerce-factory-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  factory-evidence:
+    uses: Ngh1aa/uiux-ai-workspace/.github/workflows/external-agent-runner.yml@main
+    with:
+      target_repository: Ngh1aa/LuxRoom
+      target_ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      task: "Verify the senior-commerce product upgrade: PDP decision confidence, cart recovery, checkout trust/reality boundary, lifecycle states, responsive integrity and semantic evidence."
+      authority: read_only
+      qa_routes: "/detail.html,/cart.html,/checkout.html,/recruiter-state-lab.html"
+      acceptance: "No fake payment processing;empty cart cannot proceed to checkout;cart removal has recovery;checkout preserves draft and exposes invalid state;made-to-order uncertainty remains visible;state coverage must pass desktop/tablet/mobile"
+      state_contract: "uiux-state-coverage.json"
