@@ -6,7 +6,8 @@
     "qa:configuration": "node scripts/qa-configuration-continuity.mjs",
     "qa:motion": "node scripts/qa-motion-upgrade.mjs",
     "qa:runtime": "node scripts/qa-runtime-performance.mjs",
-    "qa:figma12": "node scripts/qa-figma-12.mjs"
+    "qa:figma12": "node scripts/qa-figma-12.mjs",
+    "figma:patch-dmaya": "node scripts/patch-dmaya-editable-text.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.3",
