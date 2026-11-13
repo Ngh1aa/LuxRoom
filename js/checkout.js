@@ -81,7 +81,7 @@ function renderCheckoutSummary() {
   if (checkoutDeliveryLabel) checkoutDeliveryLabel.textContent = window.LuxRoom.deliveryPreferences.method === "placement" ? "Room delivery + placement" : "Room delivery";
   if (placeOrderButton && !placingOrder) {
     placeOrderButton.disabled = items.length === 0;
-    placeOrderButton.innerHTML = items.length ? 'Place demo order <span aria-hidden="true">↗</span>' : "Your selection is empty";
+    placeOrderButton.innerHTML = items.length ? 'Place order <span aria-hidden="true">↗</span>' : "Your selection is empty";
   }
 
   const roomFee = document.querySelector("#room-delivery-fee");
@@ -112,7 +112,7 @@ function renderDeliveryDates() {
 }
 
 function toggleSimulatedPayment() {
-  const simulated = selectedRadioValue("paymentMethod") === "Simulated card payment";
+  const simulated = selectedRadioValue("paymentMethod") === "Bank transfer";
   if (simulatedPayment) simulatedPayment.hidden = !simulated;
   const consent = document.querySelector("#simulated-consent");
   if (consent) consent.required = simulated;
@@ -149,7 +149,7 @@ function updateReview() {
   if (addressReview) addressReview.textContent = address ? [fullName, address, ward, district, province].filter(Boolean).join(", ") : "Add your delivery address above.";
   if (deliveryReview) deliveryReview.textContent = `${method}. Estimated ${arrival}`;
   if (slotReview) slotReview.textContent = slotLabel() || "Choose a delivery day above.";
-  if (paymentReview) paymentReview.textContent = `${payment}. Nothing is charged in this demo.`;
+  if (paymentReview) paymentReview.textContent = `${payment}. Nothing is charged until your order is confirmed.`;
 }
 
 let reviewFrame = 0;
@@ -186,7 +186,7 @@ function setupAccount() {
   const user = window.LuxRoom.getCurrentUser();
   if (accountNote) {
     accountNote.innerHTML = user
-      ? `<p>Signed in as <strong>${escapeHtml(user.name)}</strong>. This demo order will appear in your <a href="profile.html#orders">order history</a>.</p>`
+      ? `<p>Signed in as <strong>${escapeHtml(user.name)}</strong>. This order will appear in your <a href="profile.html#orders">order history</a>.</p>`
       : '<p>Checking out as a guest. <a href="auth.html?next=checkout.html">Sign in</a> to use saved addresses and keep the order in your history.</p>';
   }
   if (!user) return;
@@ -249,7 +249,7 @@ function createOrder() {
 }
 
 function saveOrder(order) {
-  // Stored as "luxroom-orders" / "luxroom-last-order" in sessionStorage via the demo store.
+  // Stored as "luxroom-orders" / "luxroom-last-order" in sessionStorage via the store layer.
   window.LuxRoom.saveOrderRecord(order);
 }
 
@@ -272,11 +272,11 @@ function clearFieldErrors() {
 
 function fieldMessage(field) {
   if (field.validity.valueMissing) {
-    if (field.type === "checkbox") return "Confirm that you understand this payment is simulated.";
+    if (field.type === "checkbox") return "Confirm that you will complete the bank transfer.";
     const label = checkoutForm.querySelector(`label[for="${field.id}"]`)?.textContent.trim() || "This field";
     return `${label} is required.`;
   }
-  if (field.validity.typeMismatch && field.type === "email") return "Enter an email like name@example.com.";
+  if (field.validity.typeMismatch && field.type === "email") return "Enter an email like name@domain.com.";
   return field.validationMessage || "Check this field.";
 }
 
@@ -321,7 +321,7 @@ async function placeOrder() {
   placingOrder = true;
   placeOrderButton.disabled = true;
   placeOrderButton.setAttribute("aria-busy", "true");
-  placeOrderButton.textContent = selectedRadioValue("paymentMethod") === "Simulated card payment" ? "Approving simulated payment…" : "Placing demo order…";
+  placeOrderButton.textContent = selectedRadioValue("paymentMethod") === "Bank transfer" ? "Reserving your pieces…" : "Placing your order…";
   try {
     const order = await window.LuxRoom.request(() => {
       const created = createOrder();

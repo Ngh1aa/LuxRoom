@@ -36,21 +36,23 @@ Phiên bản hiện tại giữ nguyên visual direction luxury/editorial và b�
 - Wishlist được nâng thành Saved Room, có tổng giá trị, chia sẻ và yêu cầu tư vấn.
 - Search thực theo tên, category, room, material, tone, collection và style.
 
-### Full prototype — cửa hàng demo không backend (13/11/2026)
+### Cửa hàng hoàn chỉnh không backend (13/11/2026)
 
 Site hoạt động như một cửa hàng nội thất thật, chỉ thiếu backend:
 
 - **Dữ liệu:** mọi dữ liệu người dùng (giỏ hàng, wishlist, compare, saved rooms, đơn hàng, tài khoản, địa chỉ, review) nằm trong **sessionStorage** của tab, được seed một lần từ `js/store-data.js`. Dữ liệu còn khi chuyển trang/reload, mất khi đóng tab.
-- **Footer demo:** nút **Reset demo data** đưa mọi thứ về seed; nút **Fail the next request** làm request mô phỏng kế tiếp thất bại để kiểm tra trạng thái lỗi và nút thử lại.
+- **Demo tools (ẩn):** khách truy cập bình thường không thấy công cụ demo. Mở URL bất kỳ với `?demo=1` (ví dụ https://lux-room.vercel.app/?demo=1) để hiện panel nổi **Demo tools** ở góc trái dưới, gồm **Simulate a failed request** (request kế tiếp thất bại để kiểm tra lỗi + thử lại) và **Reset demo data** (đưa mọi thứ về seed). Cờ được giữ trong sessionStorage của tab; `?demo=0` hoặc nút **Hide demo tools** để tắt.
 - **Luồng đã hoàn thiện:** lọc/sắp xếp/tìm kiếm/phân trang có loading và lỗi; PDP có finish, size, tồn kho giới hạn số lượng, ước tính giao hàng, review và trạng thái không tìm thấy; compare; wishlist; saved rooms (tạo, đổi tên, xoá, thêm/bớt món); giỏ hàng (số lượng, xoá, mã giảm giá hợp lệ/không hợp lệ/hết hạn, lưu để mua sau); checkout (địa chỉ, khung giờ giao, thanh toán khi nhận hàng hoặc thanh toán mô phỏng — không thu thập thẻ, review, trang thành công có mã đơn); theo dõi đơn, lịch sử đơn, huỷ/đổi trả; đăng ký/đăng nhập/đăng xuất/quên mật khẩu (mô phỏng); sửa hồ sơ và sổ địa chỉ; form liên hệ.
-- **Không có giao dịch thật:** mọi đơn là "demo order", không thu tiền, không gửi email. Tài khoản demo: `demo@luxroom.com` / `luxroom123`.
+- **Không có giao dịch thật:** không thu tiền, không gửi email, không có thẻ (chỉ Pay on delivery / Bank transfer). Footer mỗi trang có một dòng "Concept product designed by Đỗ Anh Nghĩa."
+- **Vào thẳng như khách đã đăng nhập:** link portfolio nên trỏ tới **https://lux-room.vercel.app/** — khách vào trang chủ, đã đăng nhập sẵn là **Linh Tran** (`linh.tran@luxroom.vn`), nên Profile, Orders (LR-6020192, LR-6110115) và Saved rooms có dữ liệu ngay. Đăng xuất vẫn hoạt động; trang đăng nhập có nút **Continue as Linh Tran** và vẫn nhận mật khẩu `luxroom123`.
+- Các trang tài liệu `figma-*` vẫn được giữ (case study link trực tiếp) nhưng không được link từ cửa hàng.
 
 Kiểm thử (cần Playwright qua `NODE_PATH`, phục vụ bản build `dist/`):
 
 ```bash
 npm run build
 py -3 -m http.server 8923 --bind 127.0.0.1 --directory dist
-node qa/e2e-full-prototype.mjs        # toàn bộ luồng + reset + quét console error / href="#"
+node qa/e2e-full-prototype.mjs --base http://127.0.0.1:8923   # toàn bộ luồng (dùng ?demo=1) + kiểm tra không còn chữ prototype khi không có ?demo
 node qa/inventory-controls.mjs        # liệt kê và bấm thử mọi control trên 16 trang
 npm run qa                            # các kiểm tra tĩnh sẵn có
 ```

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/checkout.css" />
-  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
+  <link rel="stylesheet" href="css/store-flows.css?v=real-1" />
 </head>
 <body class="checkout-page">
   <header class="topbar" aria-label="Primary navigation">
@@ -25,7 +25,7 @@
 
   <main class="site-shell checkout-main">
     <section class="checkout-intro">
-      <p class="eyebrow">Demo checkout / 04 steps</p>
+      <p class="eyebrow">Secure checkout / 04 steps</p>
       <h1>Bring the room<br><em>home.</em></h1>
       <p>Contact, delivery, payment and one final review — every practical detail is visible before you place the order.</p>
     </section>
@@ -39,7 +39,7 @@
           <div class="form-content">
             <div class="form-heading"><h2>Contact</h2><p>For your confirmation note and delivery coordination.</p></div>
             <div class="form-grid">
-              <div class="form-group"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
+              <div class="form-group"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@yourmail.com" /></div>
               <div class="form-group"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+84 9xx xxx xxx" /></div>
             </div>
           </div>
@@ -92,15 +92,15 @@
         <section class="form-section" id="payment-step">
           <div class="section-number">03</div>
           <div class="form-content">
-            <div class="form-heading"><h2>Payment</h2><p>This is a demo store: no payment is taken and no card details are requested.</p></div>
+            <div class="form-heading"><h2>Payment</h2><p>Nothing is charged online. Pay when the pieces arrive, or by bank transfer once we confirm your order.</p></div>
             <fieldset class="choice-group payment-methods">
               <legend>Payment method</legend>
               <label class="choice-row"><input type="radio" name="paymentMethod" value="Pay on delivery" checked /><span><strong>Pay on delivery</strong><small>Settle with the room team when the pieces arrive. Nothing is charged now.</small></span></label>
-              <label class="choice-row"><input type="radio" name="paymentMethod" value="Simulated card payment" /><span><strong>Simulated card payment</strong><small>A demo approval step. No card number is collected and nothing is charged.</small></span></label>
+              <label class="choice-row"><input type="radio" name="paymentMethod" value="Bank transfer" /><span><strong>Bank transfer</strong><small>We email the account details and your reference with the order confirmation.</small></span></label>
             </fieldset>
             <div class="simulated-payment" id="simulated-payment" hidden>
-              <p>When you place the order, the demo shows an approval step instead of a payment window. You will not be asked for card details.</p>
-              <label class="consent-check"><input type="checkbox" id="simulated-consent" name="simulatedConsent" /><span>I understand this is a simulated payment and no money moves.</span></label>
+              <p>Your pieces are reserved for 48 hours while the transfer clears. Use the order number as the transfer reference so the room team can match it.</p>
+              <label class="consent-check"><input type="checkbox" id="simulated-consent" name="simulatedConsent" /><span>I will complete the transfer within 48 hours of confirmation.</span></label>
             </div>
           </div>
         </section>
@@ -130,13 +130,13 @@
         <div class="summary-row"><span>Room delivery</span><span id="checkout-shipping">Included</span></div>
         <div class="summary-row total"><span>Total</span><span id="checkout-total">$0</span></div>
         <button class="primary-button place-order-btn" type="submit">Place order <span aria-hidden="true">↗</span></button>
-        <p class="order-note">Demo checkout. Placing the order records it in this browser tab only: no payment is taken and nothing is delivered.</p>
+        <p class="order-note">Nothing is charged when you place the order. The room team confirms delivery details with you before anything ships.</p>
       </aside>
     </form>
   </main>
 
   <footer class="site-shell footer"></footer>
-  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
+  <script src="js/store-data.js?v=real-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/checkout.js?v=ux-20260823-1"></script>
   <script type="module" src="js/ui-feedback-init.js?v=0.13.0"></script>
 </body>

@@ -1,5 +1,5 @@
 /*
- * Demo store persistence. There is no server: every piece of user data lives in
+ * Store persistence. There is no server: every piece of user data lives in
  * sessionStorage for this tab, seeded once from js/store-data.js (window.LUXROOM_SEED).
  * When sessionStorage is unavailable (private mode, Node QA harness) an in-memory
  * map keeps the page working for the current view.
@@ -114,7 +114,7 @@ function getPromoCatalogue() {
 
 /*
  * Simulated network. Every write that would hit a server goes through here so the
- * UI can show a loading state, and "Fail the next request" in the footer can prove
+ * UI can show a loading state, and "Simulate a failed request" in the hidden demo tools (?demo=1) can prove
  * that every flow recovers from an error.
  */
 function isFailureArmed() {
@@ -132,7 +132,7 @@ function simulateRequest(work, { delay = 420, label = "The request" } = {}) {
     window.setTimeout(() => {
       if (isFailureArmed()) {
         setFailureArmed(false);
-        const error = new Error(`${label} did not go through. The connection dropped (simulated failure). Nothing was changed. Please try again.`);
+        const error = new Error(`${label} did not go through because the connection dropped. Nothing was changed. Please try again.`);
         error.simulated = true;
         reject(error);
         return;
@@ -158,7 +158,7 @@ function consumeFlashMessage() {
 
 function resetDemoData() {
   seedStore(true);
-  setFlashMessage("Demo data reset. The cart, account and orders are back to their starting state.");
+  setFlashMessage("Store data restored. The cart, account and orders are back to their starting state.");
   window.location.reload();
 }
 
@@ -182,8 +182,24 @@ function signIn(email, password) {
   const normalized = String(email || "").trim().toLowerCase();
   const user = getUsers().find((item) => item.email.toLowerCase() === normalized);
   if (!user || user.password !== String(password || "")) {
-    throw new Error("That email and password do not match an account in this demo. Check both and try again.");
+    throw new Error("That email and password do not match a LuxRoom account. Check both and try again.");
   }
+  store.set(STORE_KEYS.session, user.id);
+  document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
+  return publicUser(user);
+}
+
+/* The seeded customer, offered as a one-tap "Continue as <Name>" on the sign-in page. */
+function getReturningCustomer() {
+  const seedId = window.LUXROOM_SEED?.users?.[0]?.id;
+  const user = getUsers().find((item) => item.id === seedId);
+  return user ? publicUser(user) : null;
+}
+
+function continueAsReturningCustomer() {
+  const seedId = window.LUXROOM_SEED?.users?.[0]?.id;
+  const user = getUsers().find((item) => item.id === seedId);
+  if (!user) throw new Error("That account is no longer available. Sign in with your email and password.");
   store.set(STORE_KEYS.session, user.id);
   document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
   return publicUser(user);
@@ -1038,7 +1054,7 @@ function upgradeFooter() {
     event.preventDefault();
     const input = footer.querySelector("#footer-email");
     if (!input?.checkValidity()) { input?.reportValidity(); return; }
-    showToast("Thank you. This demo does not store or email your address.");
+    showToast("Thank you. You are on the list for notes from LuxRoom.");
     event.currentTarget.reset();
   });
 }
@@ -1143,7 +1159,7 @@ function saveOrderRecord(order) {
 function updateOrderStatus(orderId, changes) {
   const orders = readOrders();
   const index = orders.findIndex((order) => order.id === orderId);
-  if (index < 0) throw new Error("We could not find that order in this demo.");
+  if (index < 0) throw new Error("We could not find that order.");
   orders[index] = { ...orders[index], ...changes, history: [...(orders[index].history || []), { at: new Date().toISOString(), ...changes }] };
   store.set(STORE_KEYS.orders, orders);
   document.dispatchEvent(new CustomEvent("luxroom-orders-updated", { detail: { orderId } }));
@@ -1152,14 +1168,14 @@ function updateOrderStatus(orderId, changes) {
 
 function requestOrderCancellation(orderId, reason = "") {
   const order = findOrder(orderId);
-  if (!order) throw new Error("We could not find that order in this demo.");
+  if (!order) throw new Error("We could not find that order.");
   if (!order.canCancel) throw new Error("This order is already scheduled for delivery and can no longer be cancelled online. Contact the room team instead.");
   return updateOrderStatus(order.id, { status: "Cancelled", requestReason: reason || "Changed my mind" });
 }
 
 function requestOrderReturn(orderId, reason = "") {
   const order = findOrder(orderId);
-  if (!order) throw new Error("We could not find that order in this demo.");
+  if (!order) throw new Error("We could not find that order.");
   if (!order.canReturn) throw new Error(order.returnBlockedReason || "This order cannot be returned online.");
   return updateOrderStatus(order.id, { status: "Return requested", requestReason: reason || "Not right for the room" });
 }
@@ -1194,8 +1210,8 @@ function addReview(productId, review) {
 /* Shared cancel / return request controls used by tracking and order history. */
 function orderRequestMarkup(order) {
   if (!order) return "";
-  if (order.status === "Cancelled") return `<p class="order-request-state">Cancelled at your request${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. Nothing was charged.</p>`;
-  if (order.status === "Return requested") return `<p class="order-request-state">Return requested${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. The room team would contact you to arrange collection.</p>`;
+  if (order.status === "Cancelled") return `<p class="order-request-state">Cancelled at your request${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. Nothing has been charged.</p>`;
+  if (order.status === "Return requested") return `<p class="order-request-state">Return requested${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. The room team will contact you to arrange collection.</p>`;
   const kind = order.canCancel ? "cancel" : (order.canReturn ? "return" : null);
   if (!kind) {
     const reason = order.returnBlockedReason || "This order is already scheduled for delivery, so changes go through the room team.";
@@ -1275,32 +1291,63 @@ function escapeMarkup(value) {
     .replaceAll("'", "&#039;");
 }
 
-/* Footer demo controls + global affordances shared by every page. */
-function initDemoControls() {
+/*
+ * Hidden demo tools + the footer credit line shared by every page.
+ * The tools ("Simulate a failed request", "Reset demo data") only render when the URL
+ * carries ?demo=1. The flag is kept in sessionStorage for the tab; ?demo=0 turns it off.
+ * The key deliberately does not start with "luxroom-" so a reset keeps the panel open.
+ */
+const DEMO_TOOLS_KEY = "lr-demo-tools";
+
+function demoToolsEnabled() {
+  let enabled = false;
+  try {
+    const flag = new URLSearchParams(window.location.search).get("demo");
+    if (flag === "1") sessionBackend?.setItem(DEMO_TOOLS_KEY, "1");
+    if (flag === "0") sessionBackend?.removeItem(DEMO_TOOLS_KEY);
+    enabled = flag === "1" || sessionBackend?.getItem(DEMO_TOOLS_KEY) === "1";
+  } catch {
+    enabled = false;
+  }
+  return enabled;
+}
+
+function initFooterCredit() {
   const footer = document.querySelector("footer.footer, footer.home-footer, footer.detail-footer, footer.footer-rich, body > footer");
-  if (!footer || footer.querySelector(".footer-demo")) return;
-  const panel = document.createElement("div");
-  panel.className = "footer-demo";
-  panel.setAttribute("role", "group");
-  panel.setAttribute("aria-label", "Demo store controls");
+  if (!footer || footer.querySelector(".footer-credit")) return;
+  const credit = document.createElement("p");
+  credit.className = "footer-credit";
+  credit.textContent = "Concept product designed by Đỗ Anh Nghĩa.";
+  footer.appendChild(credit);
+}
+
+function initDemoControls() {
+  if (!demoToolsEnabled() || document.querySelector(".demo-tools")) return;
+  const panel = document.createElement("details");
+  panel.className = "demo-tools";
   panel.innerHTML = `
-    <p class="footer-demo__note"><strong>Demo store.</strong> Orders, payments and accounts are simulated and kept only in this browser tab.</p>
-    <div class="footer-demo__actions">
-      <button type="button" class="footer-demo__button" data-demo-fail aria-pressed="false">Fail the next request</button>
-      <button type="button" class="footer-demo__button" data-demo-reset>Reset demo data</button>
+    <summary class="demo-tools__toggle">Demo tools</summary>
+    <div class="demo-tools__body" role="group" aria-label="Demo tools">
+      <button type="button" class="demo-tools__button" data-demo-fail aria-pressed="false">Simulate a failed request</button>
+      <button type="button" class="demo-tools__button" data-demo-reset>Reset demo data</button>
+      <button type="button" class="demo-tools__exit" data-demo-hide>Hide demo tools</button>
     </div>`;
-  footer.appendChild(panel);
+  document.body.appendChild(panel);
   const failButton = panel.querySelector("[data-demo-fail]");
   const syncFail = () => {
     const armed = isFailureArmed();
     failButton.setAttribute("aria-pressed", String(armed));
-    failButton.textContent = armed ? "Next request will fail" : "Fail the next request";
+    failButton.textContent = armed ? "Next request will fail" : "Simulate a failed request";
   };
   failButton.addEventListener("click", () => {
     setFailureArmed(!isFailureArmed());
-    showToast(isFailureArmed() ? "The next request will fail so you can test recovery." : "Simulated failure switched off.");
+    showToast(isFailureArmed() ? "The next request will fail so you can test recovery." : "Failure simulation switched off.");
   });
   panel.querySelector("[data-demo-reset]").addEventListener("click", resetDemoData);
+  panel.querySelector("[data-demo-hide]").addEventListener("click", () => {
+    try { sessionBackend?.removeItem(DEMO_TOOLS_KEY); } catch { /* ignore */ }
+    panel.remove();
+  });
   document.addEventListener("luxroom-demo-updated", syncFail);
   syncFail();
 }
@@ -1348,7 +1395,7 @@ newsletterForms.forEach((form) => {
     if (!input?.value.trim() || !input.checkValidity()) {
       input?.setAttribute("aria-invalid", "true");
       status.dataset.state = "error";
-      status.textContent = "Enter an email like name@example.com to join the list.";
+      status.textContent = "Enter an email like name@domain.com to join the list.";
       input?.focus();
       return;
     }
@@ -1359,7 +1406,7 @@ newsletterForms.forEach((form) => {
     try {
       await simulateRequest(() => true, { label: "Joining the list" });
       status.dataset.state = "success";
-      status.textContent = "You are on the list. This demo does not store or email your address.";
+      status.textContent = "You are on the list. The next note from LuxRoom will arrive in your inbox.";
       form.reset();
     } catch (error) {
       status.dataset.state = "error";
@@ -1372,6 +1419,7 @@ newsletterForms.forEach((form) => {
 upgradeFooter();
 normalizeCartContinueAction();
 initContactContext();
+initFooterCredit();
 initDemoControls();
 ensureSearchOverlay();
 syncAccountLinks();
@@ -1499,6 +1547,8 @@ window.LuxRoom = {
   validatePromoCode,
   getCurrentUser: () => publicUser(getCurrentUser()),
   signIn,
+  getReturningCustomer,
+  continueAsReturningCustomer,
   signUp,
   signOut,
   requestPasswordReset,

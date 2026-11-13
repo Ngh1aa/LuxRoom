@@ -1,36 +1,37 @@
 /*
- * LuxRoom demo store seed — the single data file for every piece of user data.
+ * LuxRoom store seed — the single data file for every piece of user data.
  *
  * There is no server. On the first page view in a browser tab, js/common.js copies
  * this seed into sessionStorage. From then on every flow (cart, wishlist, saved
  * rooms, orders, account, addresses, reviews…) reads and writes sessionStorage, so
  * state survives navigation and reload in the same tab and disappears when the tab
- * closes. "Reset demo data" in the footer restores this seed.
+ * closes. "Reset demo data" in the hidden demo tools panel (open with ?demo=1) restores this seed.
  *
- * Orders here are demo records. No payment is taken and nothing is delivered.
+ * Orders here are seed records. No payment is taken and nothing is delivered.
  */
 window.LUXROOM_SEED = {
   version: 1,
 
-  // A demo account the visitor can sign in with. Password is shown on the sign-in page.
+  // The seeded customer. Visitors arrive signed in as this account; after signing out,
+  // the sign-in page offers "Continue as Linh Tran" and still accepts these credentials.
   users: [
     {
-      id: "u-demo",
+      id: "u-linh",
       name: "Linh Tran",
-      email: "demo@luxroom.com",
+      email: "linh.tran@luxroom.vn",
       password: "luxroom123",
       phone: "+84 901 234 567",
       preferences: "Soft textures, quiet colour, natural oak.",
     },
   ],
 
-  // Signed-in user id, or null for a guest. The demo starts signed out.
-  session: null,
+  // Signed-in user id, or null for a guest. Visitors start signed in as the seeded customer.
+  session: "u-linh",
 
   addresses: [
     {
       id: "addr-1",
-      userId: "u-demo",
+      userId: "u-linh",
       label: "Home",
       fullName: "Linh Tran",
       phone: "+84 901 234 567",
@@ -42,7 +43,7 @@ window.LUXROOM_SEED = {
     },
     {
       id: "addr-2",
-      userId: "u-demo",
+      userId: "u-linh",
       label: "Studio",
       fullName: "Linh Tran",
       phone: "+84 901 234 567",
@@ -54,24 +55,24 @@ window.LUXROOM_SEED = {
     },
   ],
 
-  // Demo orders that belong to the demo account. Items reference catalogue ids.
+  // Orders that belong to the seeded customer. Items reference catalogue ids.
   orders: [
     {
-      id: "LR-DEMO-0192",
-      userId: "u-demo",
+      id: "LR-6020192",
+      userId: "u-linh",
       daysAgo: 16,
       status: "Delivered",
       items: [{ productId: 1, variantId: "1-1", sizeId: "std", quantity: 1 }],
       address: { fullName: "Linh Tran", address: "12 Nguyen Hue Boulevard, Apt 8.04", ward: "Ben Nghe", district: "District 1", province: "Ho Chi Minh City" },
-      contact: { email: "demo@luxroom.com", phone: "+84 901 234 567" },
+      contact: { email: "linh.tran@luxroom.vn", phone: "+84 901 234 567" },
       delivery: { method: "room", methodLabel: "Room delivery", slot: "Morning, 08:00–12:00", deliveredDaysAgo: 6 },
       payment: { method: "Pay on delivery" },
       promo: null,
       timelineStep: 5,
     },
     {
-      id: "LR-DEMO-0115",
-      userId: "u-demo",
+      id: "LR-6110115",
+      userId: "u-linh",
       daysAgo: 3,
       status: "Processing",
       items: [
@@ -79,9 +80,9 @@ window.LUXROOM_SEED = {
         { productId: 13, variantId: "13-1", sizeId: "std", quantity: 1 },
       ],
       address: { fullName: "Linh Tran", address: "45 Tran Phu Street", ward: "Hai Chau 1", district: "Hai Chau", province: "Da Nang" },
-      contact: { email: "demo@luxroom.com", phone: "+84 901 234 567" },
+      contact: { email: "linh.tran@luxroom.vn", phone: "+84 901 234 567" },
       delivery: { method: "placement", methodLabel: "Room delivery + placement", slot: "Afternoon, 13:00–17:00" },
-      payment: { method: "Simulated card payment" },
+      payment: { method: "Bank transfer" },
       promo: null,
       timelineStep: 1,
     },

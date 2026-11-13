@@ -41,7 +41,7 @@ function fieldsValid(form) {
     const label = form.querySelector(`label[for="${field.id}"]`)?.textContent.trim() || "This field";
     error.textContent = field.validity.valueMissing
       ? `${label} is required.`
-      : field.validity.typeMismatch ? "Enter an email like name@example.com." : field.validity.tooShort ? "Use at least 8 characters." : field.validationMessage;
+      : field.validity.typeMismatch ? "Enter an email like name@domain.com." : field.validity.tooShort ? "Use at least 8 characters." : field.validationMessage;
     field.closest(".form-group")?.appendChild(error);
   });
   invalid[0]?.focus();
@@ -70,8 +70,39 @@ async function submitWith(form, button, busyLabel, work, onSuccess) {
   }
 }
 
+const continuePanel = document.querySelector("#auth-continue");
+
+function renderContinue() {
+  if (!continuePanel) return;
+  const returning = window.LuxRoom.getReturningCustomer?.();
+  const show = Boolean(returning) && !window.LuxRoom.getCurrentUser();
+  continuePanel.hidden = !show;
+  if (!show) return;
+  continuePanel.querySelector("[data-continue-name]").textContent = returning.name;
+  continuePanel.querySelector("[data-continue-email]").textContent = returning.email;
+}
+
+document.querySelector("#auth-continue-button")?.addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  const original = button.innerHTML;
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Signing in…";
+  try {
+    const user = await window.LuxRoom.request(() => window.LuxRoom.continueAsReturningCustomer(), { label: "Signing in" });
+    window.LuxRoom.setFlashMessage(`Welcome back, ${user.name.split(" ")[0]}.`);
+    window.location.href = nextPage;
+  } catch (error) {
+    setStatus(formLogin, error.message, "error");
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.innerHTML = original;
+  }
+});
+
 function renderSignedIn() {
   const user = window.LuxRoom.getCurrentUser();
+  renderContinue();
   if (!signedInPanel) return;
   signedInPanel.hidden = !user;
   if (!user) return;
@@ -125,7 +156,7 @@ if (tabLogin && tabRegister && formLogin && formRegister) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(formForgot).entries());
     submitWith(formForgot, formForgot.querySelector("button[type='submit']"), "Sending…", () => window.LuxRoom.requestPasswordReset(data.email), (result) => {
-      setStatus(formForgot, `If an account exists for ${result.email}, a reset link would be on its way. This demo does not send email.`, "success");
+      setStatus(formForgot, `If an account exists for ${result.email}, a reset link is on its way. Check your inbox in the next few minutes.`, "success");
     });
   });
 

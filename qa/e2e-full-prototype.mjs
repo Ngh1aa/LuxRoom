@@ -9,6 +9,11 @@
 // profile edit, address CRUD, contact form, "Reset demo data", and a sweep of every
 // site page at 1440px and 390px for console errors and href="#".
 //
+// Demo tools ("Simulate a failed request", "Reset demo data") are hidden from normal
+// visitors and only render with ?demo=1 (kept for the tab in sessionStorage). The main
+// flow opens the store with ?demo=1; a separate fresh context checks that, without it,
+// no product page shows prototype wording and the tools are not visible.
+//
 // Usage:
 //   py -3 -m http.server 8923 --bind 127.0.0.1 --directory dist
 //   NODE_PATH=<playwright node_modules> node qa/e2e-full-prototype.mjs [--base http://127.0.0.1:8923]
@@ -20,6 +25,7 @@ const { chromium } = require('playwright');
 const args = process.argv.slice(2);
 const baseIndex = args.indexOf('--base');
 const BASE = (baseIndex >= 0 ? args[baseIndex + 1] : 'http://127.0.0.1:8923').replace(/\/$/, '');
+const PROTOTYPE_WORDING = /prototype|demo data|sandbox|simulat|fictional|state lab|portfolio review/i;
 const SITE_PAGES = [
   'index.html', 'products.html', 'collection.html', 'rooms.html', 'detail.html', 'compare.html',
   'cart.html', 'checkout.html', 'success.html', 'tracking.html', 'wishlist.html', 'saved-room.html',
@@ -87,7 +93,12 @@ async function visit(route) {
 
 const text = (selector) => page.locator(selector).first().innerText();
 const session = (key) => page.evaluate((storageKey) => JSON.parse(sessionStorage.getItem(storageKey) || 'null'), key);
+const openDemoTools = async () => {
+  await page.waitForSelector('.demo-tools');
+  await page.evaluate(() => { document.querySelector('.demo-tools').open = true; });
+};
 const armFailure = async () => {
+  await openDemoTools();
   await page.locator('[data-demo-fail]').click();
   await page.waitForSelector('[data-demo-fail][aria-pressed="true"]');
 };
@@ -95,13 +106,68 @@ const toast = (pattern) => page.waitForFunction((source) => Array.from(document.
 
 console.log(`LuxRoom e2e against ${BASE}`);
 
+await step('public visitor: root URL opens the home page signed in, with no prototype wording or demo tools', async () => {
+  const visitorContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  const visitor = await visitorContext.newPage();
+  visitor.setDefaultTimeout(8000);
+  const visitorErrors = [];
+  visitor.on('pageerror', (error) => visitorErrors.push(`pageerror: ${error.message}`));
+  const open = async (route) => {
+    for (let attempt = 1; ; attempt += 1) {
+      try { await visitor.goto(`${BASE}/${route}`, { waitUntil: 'load' }); return; } catch (error) {
+        if (attempt >= 4 || !TRANSPORT_NOISE.test(error.message)) throw error;
+        await visitor.waitForTimeout(500 * attempt);
+      }
+    }
+  };
+  try {
+    await open('');
+    assert(await visitor.locator('.home-hero, main').count() > 0, 'root should render the home page');
+    const signedIn = await visitor.evaluate(() => window.LuxRoom.getCurrentUser());
+    assert(signedIn && signedIn.name === 'Linh Tran', 'visitor should arrive signed in as Linh Tran');
+    assert((await visitor.locator('.topbar-actions a[aria-label="Account"]').first().getAttribute('href')) === 'profile.html', 'account icon should open the profile');
+    for (const route of SITE_PAGES.filter((entry) => entry !== 'collection.html')) {
+      await open(route);
+      await visitor.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      const bodyText = await visitor.evaluate(() => document.body.innerText + ' ' + document.title);
+      const match = bodyText.match(PROTOTYPE_WORDING);
+      assert(!match, `${route} shows prototype wording: "${match?.[0]}"`);
+      assert(!(await visitor.locator('.demo-tools, [data-demo-fail], [data-demo-reset]').count()), `${route} shows demo tools without ?demo=1`);
+      assert((await visitor.locator('.footer-credit').innerText()).includes('Concept product designed by Đỗ Anh Nghĩa'), `${route} is missing the footer credit line`);
+    }
+    await open('profile.html');
+    await visitor.waitForSelector('#order-list .order-card');
+    assert(await visitor.locator('#order-list .order-card').count() === 2, 'profile should list the 2 seeded orders');
+    await open('saved-room.html');
+    await visitor.waitForSelector('.saved-rooms-tab');
+    await open('products.html?demo=1');
+    await visitor.waitForSelector('.demo-tools', { state: 'visible' });
+    await visitor.evaluate(() => { document.querySelector('.demo-tools').open = true; });
+    await visitor.waitForSelector('[data-demo-fail]', { state: 'visible' });
+    await visitor.waitForSelector('[data-demo-reset]', { state: 'visible' });
+    await open('about.html');
+    await visitor.waitForSelector('.demo-tools', { state: 'visible' });
+    await open('about.html?demo=0');
+    assert(!(await visitor.locator('.demo-tools').count()), '?demo=0 should hide the demo tools');
+    await open('contact.html');
+    assert(!(await visitor.locator('.demo-tools').count()), 'demo tools should stay off after ?demo=0');
+    assert(!visitorErrors.length, visitorErrors.join(' | '));
+  } finally {
+    await visitorContext.close();
+  }
+});
+
 await step('seed: first visit copies the data file into sessionStorage only', async () => {
-  await visit('index.html');
+  await visit('index.html?demo=1');
   assert(await session('luxroom-seeded'), 'store was not seeded');
+  assert((await session('luxroom-session')) === 'u-linh', 'visitor should start signed in as the seeded customer');
+  await page.waitForSelector('.demo-tools', { state: 'visible' });
   const orders = await session('luxroom-orders');
   assert(orders.length === 2, `expected 2 seeded orders, found ${orders?.length}`);
   const local = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('luxroom-') && key !== 'luxroom-ui-feedback'));
   assert(local.length === 0, `user data leaked to localStorage: ${local.join(', ')}`);
+  // The catalogue, cart and guest checkout steps below run as a guest.
+  await page.evaluate(() => window.LuxRoom.signOut());
 });
 
 await step('catalogue: loading skeleton then 9 cards and pagination', async () => {
@@ -336,7 +402,7 @@ await step('checkout: validation, delivery slot, simulated payment, failure then
   const firstDay = await page.locator('#delivery-date option').nth(1).getAttribute('value');
   await page.selectOption('#delivery-date', firstDay);
   await page.selectOption('#delivery-window', 'Afternoon, 13:00–17:00');
-  await page.locator('input[name="paymentMethod"][value="Simulated card payment"]').check();
+  await page.locator('input[name="paymentMethod"][value="Bank transfer"]').check();
   await page.waitForSelector('#simulated-payment:not([hidden])');
   await page.locator('.place-order-btn').click();
   await page.waitForSelector('#simulated-consent[aria-invalid="true"]');
@@ -352,7 +418,8 @@ await step('checkout: validation, delivery slot, simulated payment, failure then
   await page.waitForSelector('#success-order-id');
   guestOrderId = new URL(page.url()).searchParams.get('order');
   assert((await text('#success-order-id')).includes(guestOrderId), 'success page should show the order number');
-  assert((await text('#success-demo-note')).includes('no payment was taken'), 'success must say no payment was taken');
+  assert((await text('#success-demo-note')).includes('guest@example.com'), 'success should name the confirmation email');
+  assert((await text('#success-demo-note')).includes('No payment has been taken'), 'success must say no payment was taken');
   assert((await session('luxroom-cart-items')).length === 0, 'cart should be empty after ordering');
 });
 
@@ -375,11 +442,11 @@ await step('tracking: lookup not found and found by number + email', async () =>
   await page.locator('#tracking-lookup-form button[type="submit"]').click();
   await page.waitForSelector('#tracking-lookup-status[data-state="error"]');
   await page.waitForSelector('#tracking-empty:not([hidden])');
-  await page.fill('#lookup-order', 'lr-demo-0115');
-  await page.fill('#lookup-email', 'demo@luxroom.com');
+  await page.fill('#lookup-order', 'lr-6110115');
+  await page.fill('#lookup-email', 'linh.tran@luxroom.vn');
   await page.locator('#tracking-lookup-form button[type="submit"]').click();
   await page.waitForSelector('#tracking-content:not([hidden])');
-  assert((await text('#tracking-order-id')).includes('LR-DEMO-0115'), 'seeded order should be found');
+  assert((await text('#tracking-order-id')).includes('LR-6110115'), 'seeded order should be found');
 });
 
 await step('auth: forgot password, wrong password, duplicate sign-up', async () => {
@@ -388,18 +455,18 @@ await step('auth: forgot password, wrong password, duplicate sign-up', async () 
   await page.waitForSelector('#form-forgot.active');
   await page.locator('#form-forgot button[type="submit"]').click();
   await page.waitForSelector('#form-forgot .field-error');
-  await page.fill('#forgot-email', 'demo@luxroom.com');
+  await page.fill('#forgot-email', 'linh.tran@luxroom.vn');
   await page.locator('#form-forgot button[type="submit"]').click();
   await page.waitForSelector('#forgot-status[data-state="success"]');
-  assert((await text('#forgot-status')).includes('does not send email'), 'forgot password must be honest about the demo');
+  assert((await text('#forgot-status')).includes('reset link is on its way'), 'forgot password should confirm the reset link');
   await page.locator('#forgot-cancel').click();
-  await page.fill('#login-email', 'demo@luxroom.com');
+  await page.fill('#login-email', 'linh.tran@luxroom.vn');
   await page.fill('#login-password', 'wrong-password');
   await page.locator('#form-login button[type="submit"]').click();
   await page.waitForSelector('#login-status[data-state="error"]');
   await page.locator('#tab-register').click();
-  await page.fill('#reg-name', 'Second Demo');
-  await page.fill('#reg-email', 'demo@luxroom.com');
+  await page.fill('#reg-name', 'Second Customer');
+  await page.fill('#reg-email', 'linh.tran@luxroom.vn');
   await page.fill('#reg-password', 'longenough');
   await page.locator('#form-register button[type="submit"]').click();
   await page.waitForFunction(() => document.querySelector('#register-status').textContent.includes('already exists'));
@@ -412,26 +479,29 @@ await step('auth: sign up, land on profile, sign out', async () => {
   assert((await text('#profile-greeting')).includes('Second'), 'greeting should use the new name');
   assert((await page.locator('.topbar-actions a[aria-label="Account"]').getAttribute('href')) === 'profile.html', 'account icon should point to profile');
   await Promise.all([page.waitForURL(/auth\.html/), page.locator('#sign-out').click()]);
+  await page.waitForSelector('#auth-continue:not([hidden])');
+  assert((await page.locator('#auth-continue-button').textContent()).includes('Continue as Linh Tran'), 'sign-in should offer Continue as Linh Tran');
+  assert(!(await page.locator('text=/luxroom123/').count()), 'sign-in page must not print credentials');
   await visit('profile.html');
   await page.waitForSelector('#profile-signed-out:not([hidden])');
 });
 
-await step('auth + order history: sign in as demo, cancel and return seeded orders', async () => {
+await step('auth + order history: sign in with credentials, cancel and return seeded orders', async () => {
   await visit('auth.html?next=profile.html');
-  await page.fill('#login-email', 'demo@luxroom.com');
+  await page.fill('#login-email', 'linh.tran@luxroom.vn');
   await page.fill('#login-password', 'luxroom123');
   await Promise.all([page.waitForURL(/profile\.html/), page.locator('#form-login button[type="submit"]').click()]);
   await page.waitForSelector('#order-list .order-card');
-  assert(await page.locator('#order-list .order-card').count() === 2, 'demo account has 2 orders');
-  const processing = page.locator('.order-card[data-order-id="LR-DEMO-0115"]');
+  assert(await page.locator('#order-list .order-card').count() === 2, 'seeded customer has 2 orders');
+  const processing = page.locator('.order-card[data-order-id="LR-6110115"]');
   await processing.locator('[data-order-request-open]').click();
   await processing.locator('.order-request__confirm').click();
-  await page.waitForSelector('.order-card[data-order-id="LR-DEMO-0115"] .order-status:text("Cancelled")');
-  const delivered = page.locator('.order-card[data-order-id="LR-DEMO-0192"]');
+  await page.waitForSelector('.order-card[data-order-id="LR-6110115"] .order-status:text("Cancelled")');
+  const delivered = page.locator('.order-card[data-order-id="LR-6020192"]');
   await delivered.locator('[data-order-request-open]').click();
   await delivered.locator('.order-request__form select').selectOption('Too large for the space');
   await delivered.locator('.order-request__confirm').click();
-  await page.waitForSelector('.order-card[data-order-id="LR-DEMO-0192"] .order-status:text("Return requested")');
+  await page.waitForSelector('.order-card[data-order-id="LR-6020192"] .order-status:text("Return requested")');
 });
 
 await step('order history: failed load shows retry', async () => {
@@ -446,12 +516,12 @@ await step('profile: edit details with validation', async () => {
   await page.fill('#profile-email', 'not-an-email');
   await page.locator('#profile-form button[type="submit"]').click();
   await page.waitForSelector('#profile-status[data-state="error"]');
-  await page.fill('#profile-email', 'demo@luxroom.com');
+  await page.fill('#profile-email', 'linh.tran@luxroom.vn');
   await page.fill('#profile-phone', '+84 909 111 222');
   await page.locator('#profile-form button[type="submit"]').click();
   await page.waitForSelector('#profile-status[data-state="success"]');
   const users = await session('luxroom-users');
-  assert(users.find((user) => user.id === 'u-demo').phone === '+84 909 111 222', 'phone should persist');
+  assert(users.find((user) => user.id === 'u-linh').phone === '+84 909 111 222', 'phone should persist');
 });
 
 await step('addresses: create with validation, edit, make default, delete', async () => {
@@ -489,7 +559,7 @@ await step('checkout signed in: saved address prefills the delivery form', async
   await page.waitForSelector('#saved-address-picker:not([hidden])');
   assert((await page.inputValue('#address')) === '22 Hang Bai', 'default address should prefill');
   assert((await page.inputValue('#province')) === 'Hanoi', 'province should prefill');
-  assert((await page.inputValue('#email')) === 'demo@luxroom.com', 'email should prefill');
+  assert((await page.inputValue('#email')) === 'linh.tran@luxroom.vn', 'email should prefill');
 });
 
 await step('contact: validation, failed send with retry, success', async () => {
@@ -498,7 +568,7 @@ await step('contact: validation, failed send with retry, success', async () => {
   await page.waitForSelector('#contact-form-status[data-state="error"]');
   await page.fill('#first_name', 'Linh');
   await page.fill('#last_name', 'Tran');
-  await page.fill('#email', 'demo@luxroom.com');
+  await page.fill('#email', 'linh.tran@luxroom.vn');
   await page.fill('#message', 'We are planning a small living room and need help with scale.');
   await page.locator('input[name="contact_consent"]').check();
   await armFailure();
@@ -509,13 +579,23 @@ await step('contact: validation, failed send with retry, success', async () => {
   await page.waitForSelector('#contact-form-status[data-state="success"]');
 });
 
+await step('sign out, then Continue as Linh Tran signs back in', async () => {
+  await visit('profile.html');
+  await Promise.all([page.waitForURL(/auth\.html/), page.locator('#sign-out').click()]);
+  await page.waitForSelector('#auth-continue-button');
+  await Promise.all([page.waitForURL(/profile\.html/), page.locator('#auth-continue-button').click()]);
+  await page.waitForSelector('#order-list .order-card');
+  assert((await text('#profile-greeting')).includes('Linh'), 'greeting should welcome Linh back');
+});
+
 await step('reset demo data restores the seed', async () => {
   await visit('cart.html');
+  await openDemoTools();
   await page.locator('[data-demo-reset]').click();
   await page.waitForLoadState('load');
   await page.waitForSelector('.toast-msg');
   assert((await session('luxroom-cart-items')).length === 0, 'cart should be empty after reset');
-  assert((await session('luxroom-session')) === null, 'session should be signed out after reset');
+  assert((await session('luxroom-session')) === 'u-linh', 'reset should sign the seeded customer back in');
   const orders = await session('luxroom-orders');
   assert(orders.length === 2 && orders.every((order) => !['Cancelled', 'Return requested'].includes(order.status)), 'orders should be back to the seed');
   assert((await session('luxroom-saved-rooms')).length === 1, 'saved rooms should be back to the seed');

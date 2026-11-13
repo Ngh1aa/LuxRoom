@@ -45,7 +45,7 @@ async function renderOrders() {
     const orders = await app.request(() => app.listOrders(), { label: "Loading your orders", delay: 380 });
     orderList.innerHTML = orders.length
       ? orders.map(orderCard).join("")
-      : '<div class="state-empty"><strong>No orders yet.</strong><p>When you place a demo order while signed in, it appears here with tracking and cancel options.</p><a class="text-link" href="products.html">Explore the collection <span aria-hidden="true">↗</span></a></div>';
+      : '<div class="state-empty"><strong>No orders yet.</strong><p>When you place an order while signed in, it appears here with tracking and cancel options.</p><a class="text-link" href="products.html">Explore the collection <span aria-hidden="true">↗</span></a></div>';
   } catch (error) {
     orderList.innerHTML = `<div class="state-error" role="alert"><strong>Your orders did not load.</strong><p>${escapeHtml(error.message)}</p><button type="button" class="secondary-button" id="orders-retry">Try again</button></div>`;
   } finally {
@@ -230,7 +230,7 @@ addressForm?.addEventListener("submit", async (event) => {
 
 document.querySelector("#sign-out")?.addEventListener("click", () => {
   app.signOut();
-  app.setFlashMessage("You are signed out. Your cart stays in this tab.");
+  app.setFlashMessage("You are signed out. Your cart is still here.");
   window.location.href = "auth.html";
 });
 

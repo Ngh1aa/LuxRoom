@@ -16,7 +16,7 @@ function markContactErrors() {
     error.className = "field-error";
     error.textContent = field.type === "checkbox"
       ? "Please agree to be contacted about this request."
-      : field.validity.typeMismatch ? "Enter an email like name@example.com." : "This field is required.";
+      : field.validity.typeMismatch ? "Enter an email like name@domain.com." : "This field is required.";
     (field.closest(".form-group") || field.closest(".consent-check"))?.appendChild(error);
   });
   invalid[0]?.focus();
@@ -38,8 +38,8 @@ async function sendContact() {
     const name = contactForm.querySelector("#first_name")?.value.trim();
     await window.LuxRoom.request(() => true, { label: "Sending your note", delay: 550 });
     contactForm.reset();
-    setContactStatus(`Thank you${name ? `, ${name}` : ""}. Your note is recorded in this demo. In the live store the studio replies within two working days.`, "success");
-    window.LuxRoom.showToast("Your note is recorded (demo).");
+    setContactStatus(`Thank you${name ? `, ${name}` : ""}. Your note is with the studio. We reply within two working days.`, "success");
+    window.LuxRoom.showToast("Your note is with the studio.");
   } catch (error) {
     contactStatus.innerHTML = "";
     contactStatus.dataset.state = "error";

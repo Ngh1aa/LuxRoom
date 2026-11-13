@@ -29,12 +29,12 @@ function renderOrder(order) {
   if (empty) empty.hidden = true;
   if (content) content.hidden = false;
   document.title = `LuxRoom | Track ${order.id}`;
-  document.querySelector("#tracking-order-id").textContent = `Demo order / ${order.id}`;
+  document.querySelector("#tracking-order-id").textContent = `Order / ${order.id}`;
   document.querySelector("#tracking-current-status").textContent = order.status;
   document.querySelector("#tracking-arrival").textContent = order.status === "Cancelled" ? "Not scheduled" : order.delivery.arrival;
   document.querySelector("#tracking-delivery").textContent = order.delivery.methodLabel;
   document.querySelector("#tracking-slot").textContent = order.delivery.slot || "To be confirmed by phone";
-  document.querySelector("#tracking-payment").textContent = `${order.payment.method}, nothing charged`;
+  document.querySelector("#tracking-payment").textContent = `${order.payment.method}, nothing charged online`;
   document.querySelector("#tracking-total").textContent = window.LuxRoom.formatMoney(order.totals.total);
   document.querySelector("#tracking-address").textContent = [order.address.address, order.address.ward, order.address.district, order.address.province].filter(Boolean).join(", ");
 
@@ -66,7 +66,7 @@ function loadFromUrl() {
   }
   const order = window.LuxRoom.findOrder(requestedOrder);
   if (order && ownsOrder(order)) renderOrder(order);
-  else showEmpty(`There is no demo order ${requestedOrder} you can view in this tab. Look it up with the email used at checkout, or sign in.`);
+  else showEmpty(`We could not find order ${requestedOrder} on this account. Look it up with the email used at checkout, or sign in.`);
 }
 
 lookupForm?.addEventListener("submit", async (event) => {

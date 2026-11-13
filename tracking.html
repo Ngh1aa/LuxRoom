@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/tracking.css" />
-  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
+  <link rel="stylesheet" href="css/store-flows.css?v=real-1" />
 </head>
 <body class="tracking-page">
   <header class="topbar" aria-label="Primary navigation">
@@ -33,12 +33,12 @@
     <section class="tracking-lookup" id="tracking-lookup" aria-labelledby="tracking-lookup-title">
       <div>
         <p class="eyebrow">Find an order</p>
-        <h2 id="tracking-lookup-title">Look up a demo order</h2>
-        <p>Enter the order number from your confirmation and the email used at checkout. Try <strong>LR-DEMO-0115</strong> with <strong>demo@luxroom.com</strong>.</p>
+        <h2 id="tracking-lookup-title">Look up an order</h2>
+        <p>Enter the order number from your confirmation email and the email address used at checkout.</p>
       </div>
       <form class="tracking-lookup__form" id="tracking-lookup-form" novalidate>
         <div class="form-group"><label for="lookup-order">Order number</label><input id="lookup-order" name="order" type="text" autocomplete="off" required placeholder="LR-123456" /></div>
-        <div class="form-group"><label for="lookup-email">Email address</label><input id="lookup-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
+        <div class="form-group"><label for="lookup-email">Email address</label><input id="lookup-email" name="email" type="email" autocomplete="email" required placeholder="you@yourmail.com" /></div>
         <button class="primary-button" type="submit">Find order <span aria-hidden="true">↗</span></button>
         <p class="form-status" id="tracking-lookup-status" role="status" aria-live="polite"></p>
       </form>
@@ -47,7 +47,7 @@
     <section class="tracking-layout" id="tracking-content" hidden>
       <div class="tracking-journey">
         <p class="eyebrow">Delivery journey</p>
-        <p class="tracking-demo-note">Demo order. Statuses are simulated and nothing is shipped.</p>
+        <p class="tracking-demo-note">We email you as each step begins. Questions about timing go straight to the room team.</p>
         <ol id="tracking-timeline"></ol>
         <div class="tracking-request" id="tracking-request"></div>
       </div>
@@ -63,7 +63,7 @@
   </main>
 
   <footer class="site-shell footer"></footer>
-  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
+  <script src="js/store-data.js?v=real-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/tracking.js?v=ux-20260823-1"></script>
   <script type="module" src="js/ui-feedback-init.js?v=0.13.0"></script>
 </body>

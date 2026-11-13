@@ -1,7 +1,7 @@
 /*
  * LuxRoom Purchase Confidence Layer — 2026-09-14
  * Structural commerce extension governed by the UIUX Factory design contract.
- * Prototype persistence lives in the demo store (sessionStorage for this tab) and is labelled in the UI.
+ * Persistence lives in the store layer (sessionStorage for this tab).
  */
 (() => {
   const app = window.LuxRoom;
@@ -63,17 +63,17 @@
 
   function warrantyGuidance(product) {
     if (product.category === "Lighting") {
-      return "Prototype policy: 2 years electrical / finish";
+      return "2 years electrical / finish";
     }
     if (product.materialGroup === "Textile") {
-      return "Prototype policy: 5 years structural / 2 years upholstery";
+      return "5 years structural / 2 years upholstery";
     }
-    return "Prototype policy: 5 years structural / 2 years finish";
+    return "5 years structural / 2 years finish";
   }
 
   app.products.forEach((product) => {
     product.designer = product.designer || "LuxRoom Studio";
-    product.designerNote = product.designerNote || "Prototype product authorship for this portfolio case study.";
+    product.designerNote = product.designerNote || "Drawn and specified in the LuxRoom studio in Ho Chi Minh City.";
     product.seatingCapacity = product.seatingCapacity || seatingCapacity(product);
     product.warrantyGuidance = product.warrantyGuidance || warrantyGuidance(product);
     product.specCode = product.specCode || `LR-SPEC-${String(product.id).padStart(3, "0")}`;
@@ -282,7 +282,7 @@
       return {
         status: "needs-input",
         label: "Enter room measurements",
-        detail: "Add room width, depth and the narrowest doorway to get prototype guidance.",
+        detail: "Add room width, depth and the narrowest doorway to get fit guidance.",
       };
     }
 
@@ -297,7 +297,7 @@
         label: "Needs confirmation",
         detail: !roomFits
           ? `The ${width} × ${depth} cm footprint plus ${clearance} cm clearance does not fit the entered room dimensions in either orientation.`
-          : `The ${doorway} cm doorway is narrower than this prototype's ${accessReference} cm access reference.`,
+          : `The ${doorway} cm doorway is narrower than this piece's ${accessReference} cm access reference.`,
       };
     }
 
@@ -312,7 +312,7 @@
     return {
       status: "likely",
       label: "Likely fits",
-      detail: `The footprint fits the entered room with ${clearance} cm desired clearance, and the doorway has prototype tolerance.`,
+      detail: `The footprint fits the entered room with ${clearance} cm desired clearance, and the doorway has enough tolerance.`,
     };
   }
 
@@ -403,7 +403,7 @@
         <p>Inspiration starts the search. Confidence comes from fit, finish, access and a way to hold the options together.</p>
       </div>
       <div class="decision-desk__routes">
-        <a href="detail.html?product=8#will-it-fit"><span>01 / Fit guidance</span><strong>Will it fit?</strong><small>Prototype room + doorway check</small><b aria-hidden="true">↗</b></a>
+        <a href="detail.html?product=8#will-it-fit"><span>01 / Fit guidance</span><strong>Will it fit?</strong><small>Room + doorway check</small><b aria-hidden="true">↗</b></a>
         <a href="compare.html"><span>02 / Decision evidence</span><strong>Compare products</strong><small>Dimensions, finish, lead time and care</small><b aria-hidden="true">↗</b></a>
         <a href="saved-room.html"><span>03 / Room memory</span><strong>Saved room</strong><small>Products, finishes + measurements in one place</small><b aria-hidden="true">↗</b></a>
       </div>`;
@@ -449,7 +449,7 @@
     strip.innerHTML = `
       <p><span class="clay-point" aria-hidden="true"></span> Decision workbench</p>
       <a href="compare.html"><strong>Compare <span data-compare-count>${getCompareIds().length}</span>/3</strong><small>Dimensions, finish and lead time</small><span aria-hidden="true">↗</span></a>
-      <a href="saved-room.html"><strong>Saved rooms</strong><small>Kept in this browser tab</small><span aria-hidden="true">↗</span></a>
+      <a href="saved-room.html"><strong>Saved rooms</strong><small>Pieces and measurements together</small><span aria-hidden="true">↗</span></a>
       <a href="detail.html?product=8#will-it-fit"><strong>Will it fit?</strong><small>Room + doorway guidance</small><span aria-hidden="true">↗</span></a>`;
     results.before(strip);
     enhanceProductCards(document);
@@ -470,11 +470,11 @@
     return `
       <figure class="technical-drawing" aria-labelledby="technical-drawing-title">
         <figcaption>
-          <span class="object-index">Technical drawing / prototype</span>
+          <span class="object-index">Technical drawing / dimensions</span>
           <strong id="technical-drawing-title">${escapeHtml(product.name)}: elevation + plan</strong>
           <small>Not for construction. Confirm final dimensions and delivery access before purchase.</small>
         </figcaption>
-        <svg viewBox="0 0 820 360" role="img" aria-label="Prototype technical drawing for ${escapeHtml(product.name)}">
+        <svg viewBox="0 0 820 360" role="img" aria-label="Technical drawing for ${escapeHtml(product.name)}">
           <defs><marker id="lr-arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z"></path></marker></defs>
           <g class="drawing-object">
             <rect x="86" y="82" width="250" height="150" rx="3"></rect>
@@ -503,7 +503,7 @@
     return `
       <section class="will-it-fit" id="will-it-fit" aria-labelledby="will-it-fit-title">
         <div class="will-it-fit__intro">
-          <p class="object-index">Prototype guidance / room fit</p>
+          <p class="object-index">Fit guidance / room fit</p>
           <h2 id="will-it-fit-title">Will it<br /><em>fit?</em></h2>
           <p>Check footprint and the narrowest doorway before finish becomes the deciding factor.</p>
           <div class="fit-product-reference"><span>${formatDimensions(product)}</span><small>${escapeHtml(product.name)}</small></div>
@@ -521,10 +521,10 @@
           </div>
           <output class="fit-result" id="fit-result" aria-live="polite">
             <span class="fit-result__status">Enter measurements</span>
-            <strong>Prototype guidance only</strong>
+            <strong>Guidance only</strong>
             <p>This does not evaluate stairs, turns, lifts, packaging, disassembly or site conditions.</p>
           </output>
-          <p class="prototype-disclaimer">Prototype guidance only — not an architectural or delivery guarantee. For narrow access or complex routes, request confirmation from the room team.</p>
+          <p class="prototype-disclaimer">Guidance only — not an architectural or delivery guarantee. For narrow access or complex routes, request confirmation from the room team.</p>
         </form>
       </section>`;
   }
@@ -541,8 +541,8 @@
   function buildSpecText(product, variant) {
     const care = (product.care || []).map((item) => `- ${item}`).join("\n");
     return [
-      "LUXROOM — PROTOTYPE PRODUCT SPECIFICATION",
-      "Portfolio case study / not a construction document",
+      "LUXROOM — PRODUCT SPECIFICATION",
+      "For planning only / not a construction document",
       "",
       `Product: ${product.name}`,
       `Spec code: ${product.specCode}`,
@@ -570,7 +570,7 @@
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${product.slug}-prototype-spec.txt`;
+    anchor.download = `${product.slug}-spec.txt`;
     document.body.append(anchor);
     anchor.click();
     anchor.remove();
@@ -661,7 +661,7 @@
     if (summary) summary.textContent = `${products.length} of ${MAX_COMPARE} products selected`;
 
     if (!products.length) {
-      grid.innerHTML = `<div class="confidence-empty"><p class="object-index">Comparison / empty</p><h2>Choose two pieces<br />to make the trade-offs visible.</h2><p>Add products from the collection. Your selection stays in this browser tab only.</p><a class="primary-button" href="products.html">Explore collection ↗</a></div>`;
+      grid.innerHTML = `<div class="confidence-empty"><p class="object-index">Comparison / empty</p><h2>Choose two pieces<br />to make the trade-offs visible.</h2><p>Add products from the collection. Compare up to three pieces side by side.</p><a class="primary-button" href="products.html">Explore collection ↗</a></div>`;
       return;
     }
 
@@ -698,7 +698,7 @@
         `).join("")}
       </div>
       <div class="compare-next">
-        <p><strong>${products.length < 2 ? "Add one more product to make comparison useful." : "Trade-offs visible. Now check the room."}</strong><span>Comparison is stored only in this browser tab.</span></p>
+        <p><strong>${products.length < 2 ? "Add one more product to make comparison useful." : "Trade-offs visible. Now check the room."}</strong><span>Compare up to three pieces at a time.</span></p>
         <div><a href="products.html" class="secondary-button">${products.length < MAX_COMPARE ? "Add another product" : "Back to collection"} ↗</a><a href="saved-room.html" class="text-link">Open saved room ↗</a></div>
       </div>`;
   }
@@ -749,8 +749,8 @@
         const summary = roomDecisionSummary(room, items);
         decisionSummary.dataset.fitTone = summary.fitTone;
         decisionSummary.innerHTML = `
-          <article><span>Room fit</span><strong>${escapeHtml(summary.fitLabel)}</strong><small>${hasRoomMeasurements(room) ? "Prototype guidance across saved pieces." : "Save room width, depth and doorway above."}</small></article>
-          <article><span>Saved value</span><strong>${escapeHtml(summary.total)}</strong><small>Selected prototype variants.</small></article>
+          <article><span>Room fit</span><strong>${escapeHtml(summary.fitLabel)}</strong><small>${hasRoomMeasurements(room) ? "Fit guidance across saved pieces." : "Save room width, depth and doorway above."}</small></article>
+          <article><span>Saved value</span><strong>${escapeHtml(summary.total)}</strong><small>Selected finishes and sizes.</small></article>
           <article><span>Longest lead</span><strong>${escapeHtml(summary.longestLead)}</strong><small>Use the slowest piece when planning the room.</small></article>
           <article><span>Handoff</span><strong>${items.length ? "Brief ready" : "Add a piece"}</strong><small>Consultation carries room constraints and saved pieces forward.</small></article>`;
       }
@@ -893,7 +893,7 @@
         <span class="object-index">Context carried forward</span>
         <div><strong>${escapeHtml(roomName)}</strong><small>${escapeHtml(measurementText)}</small></div>
         <div><strong>${pieces.length} saved piece${pieces.length === 1 ? "" : "s"}</strong><small>${escapeHtml(piecesText)}</small></div>
-        <p>Prototype handoff only. Review and edit the note before sending.</p>`;
+        <p>Review and edit the note before sending.</p>`;
       form.prepend(brief);
     }
   }

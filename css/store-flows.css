@@ -1,4 +1,4 @@
-/* LuxRoom demo store flows — states and controls added for the full prototype.
+/* LuxRoom store flows — states and controls shared by the commerce pages.
    Uses the existing tokens only: architectural corners (radius ≤ 2px), hairlines,
    ink / clay / paper, uppercase micro labels. */
 
@@ -28,17 +28,21 @@
 
 .primary-button[aria-disabled="true"], .btn-qty[aria-disabled="true"], .cart-qty button[aria-disabled="true"] { opacity: .45; }
 
-/* ---------- Footer demo controls ---------- */
-.footer-demo { width: min(100%, var(--content)); margin: 22px auto 0; padding-top: 18px; border-top: 1px solid rgba(251, 250, 247, .16); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
-.footer-demo__note { max-width: 560px; margin: 0; color: rgba(251, 250, 247, .78); font-size: var(--text-sm); line-height: 1.5; }
-.footer-demo__note strong { color: var(--paper); font-weight: 600; }
-.footer-demo__actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.footer-demo__button { min-height: 44px; padding: 0 16px; border: 1px solid rgba(251, 250, 247, .4); border-radius: var(--radius-sm); color: var(--paper); font: 600 var(--text-xs)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
-.footer-demo__button:hover, .footer-demo__button:focus-visible { border-color: #C2A58F; color: #C2A58F; }
-.footer-demo__button[aria-pressed="true"] { border-color: #E1A693; background: rgba(225, 166, 147, .14); color: #F2C9BC; }
-footer:not(.footer-rich) .footer-demo { grid-column: 1 / -1; border-top-color: var(--hairline); }
-footer:not(.footer-rich) .footer-demo__note, footer:not(.footer-rich) .footer-demo__note strong { color: var(--stone); }
-footer:not(.footer-rich) .footer-demo__button { border-color: var(--hairline); color: var(--ink); }
+/* ---------- Footer credit + hidden demo tools (?demo=1) ---------- */
+.footer-credit { width: min(100%, var(--content)); margin: 18px auto 0; color: rgba(251, 250, 247, .56); font-size: .75rem; line-height: 1.5; letter-spacing: .02em; }
+footer:not(.footer-rich) .footer-credit { grid-column: 1 / -1; color: var(--stone); }
+.demo-tools { position: fixed; left: 16px; bottom: 16px; z-index: 900; max-width: calc(100vw - 32px); border: 1px solid rgba(251, 250, 247, .22); border-radius: var(--radius-sm, 2px); background: var(--ink, #1f1f1b); color: var(--paper, #fbfaf7); font: 500 .75rem/1.3 var(--font-ui, system-ui, sans-serif); box-shadow: 0 10px 30px rgba(0, 0, 0, .18); }
+.demo-tools__toggle { min-height: 36px; padding: 10px 14px; cursor: pointer; letter-spacing: .08em; text-transform: uppercase; list-style: none; opacity: .82; }
+.demo-tools__toggle::-webkit-details-marker { display: none; }
+.demo-tools__toggle::before { content: "+ "; }
+.demo-tools[open] .demo-tools__toggle::before { content: "− "; }
+.demo-tools__toggle:hover, .demo-tools__toggle:focus-visible { opacity: 1; }
+.demo-tools__body { display: grid; gap: 8px; padding: 0 12px 12px; }
+.demo-tools__button, .demo-tools__exit { min-height: 40px; padding: 0 14px; border: 1px solid rgba(251, 250, 247, .4); border-radius: var(--radius-sm, 2px); color: var(--paper, #fbfaf7); font: 600 .6875rem/1 var(--font-ui, system-ui, sans-serif); letter-spacing: .08em; text-transform: uppercase; text-align: left; background: transparent; }
+.demo-tools__exit { border-color: transparent; opacity: .7; }
+.demo-tools__button:hover, .demo-tools__button:focus-visible, .demo-tools__exit:hover, .demo-tools__exit:focus-visible { border-color: #C2A58F; color: #C2A58F; opacity: 1; }
+.demo-tools__button[aria-pressed="true"] { border-color: #E1A693; background: rgba(225, 166, 147, .14); color: #F2C9BC; }
+@media print { .demo-tools { display: none; } }
 .footer-rich__bottom, .footer-rich__newsletter small { font-size: var(--text-sm); }
 
 /* ---------- Collection ---------- */
@@ -141,7 +145,7 @@ footer:not(.footer-rich) .footer-demo__button { border-color: var(--hairline); c
 .checkout-account-note a { color: var(--clay); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .saved-address-picker { display: grid; gap: 8px; margin-bottom: 18px; }
 .saved-address-picker label { color: var(--ink); font: 600 var(--text-xs)/1.3 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
-.saved-address-picker select { min-height: 50px; padding: 0 12px; border: 1px solid var(--hairline); background: var(--paper); font-size: var(--text-md); }
+.saved-address-picker select { width: 100%; max-width: 100%; min-width: 0; min-height: 50px; padding: 0 12px; border: 1px solid var(--hairline); background: var(--paper); font-size: var(--text-md); }
 .delivery-slot { margin-top: 24px; }
 .delivery-slot__hint { margin: 6px 0 14px; color: var(--stone); font-size: var(--text-sm); }
 .simulated-payment { display: grid; gap: 12px; margin-top: 16px; padding: 16px; border: 1px solid var(--hairline); background: var(--surface); }
@@ -226,8 +230,6 @@ footer:not(.footer-rich) .footer-demo__button { border-color: var(--hairline); c
 }
 
 /* ---------- Auth ---------- */
-.auth-demo-hint { margin: -14px 0 22px; padding: 12px 14px; border: 1px solid var(--hairline); background: var(--surface); color: var(--stone); font-size: var(--text-sm); line-height: 1.5; }
-.auth-demo-hint strong { color: var(--ink); }
 .auth-signed-in { display: grid; gap: 14px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--hairline); }
 .auth-signed-in p { margin: 0; color: var(--stone); font-size: var(--text-sm); }
 .auth-signed-in div { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -311,3 +313,17 @@ footer.footer.footer-rich, footer.home-footer.footer-rich, footer.detail-footer.
 /* Checkout review: five cards on a two-column grid; the last spans the row instead of leaving an empty cell. */
 .review-grid article:last-child:nth-child(odd) { grid-column: 1 / -1; }
 #mobile-add-to-cart [aria-hidden="true"] { color: inherit; }
+
+/* ---------- Sign-in: continue as the returning customer ---------- */
+.auth-continue { display: grid; gap: 10px; margin: -6px 0 22px; }
+.auth-continue__button { width: 100%; justify-content: center; }
+.auth-continue__meta { margin: 0; color: var(--stone); font-size: var(--text-sm); text-align: center; }
+.auth-continue__divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 0; color: var(--stone); font-size: var(--text-xs); letter-spacing: .08em; text-transform: uppercase; }
+.auth-continue__divider::before, .auth-continue__divider::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+
+/* ---------- Sign-in: continue as the returning customer ---------- */
+.auth-continue { display: grid; gap: 10px; margin: -6px 0 22px; }
+.auth-continue__button { width: 100%; justify-content: center; }
+.auth-continue__meta { margin: 0; color: var(--stone); font-size: var(--text-sm); text-align: center; }
+.auth-continue__divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 0; color: var(--stone); font-size: var(--text-xs); letter-spacing: .08em; text-transform: uppercase; }
+.auth-continue__divider::before, .auth-continue__divider::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }

@@ -368,7 +368,7 @@ function renderReviews() {
     <article class="review-item">
       <header>${stars(review.rating)}<span class="sr-only">${review.rating} out of 5</span><strong>${window.LuxRoom.escapeHtml(review.title || "Review")}</strong></header>
       <p>${window.LuxRoom.escapeHtml(review.body)}</p>
-      <footer>${window.LuxRoom.escapeHtml(review.name)}, ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(review.date))}${review.local ? " (your review, this tab only)" : ""}</footer>
+      <footer>${window.LuxRoom.escapeHtml(review.name)}, ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(review.date))}${review.local ? " (your review)" : ""}</footer>
     </article>`).join("");
 }
 
@@ -408,7 +408,7 @@ function setupReviews() {
       form.reset();
       form.hidden = true;
       if (toggle) toggle.hidden = false;
-      setReviewStatus("Thank you. Your review is posted (kept in this tab only).", "success");
+      setReviewStatus("Thank you. Your review is posted.", "success");
       renderReviews();
     } catch (error) {
       setReviewStatus(error.message, "error");
