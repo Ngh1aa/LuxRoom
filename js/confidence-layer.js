@@ -1,7 +1,7 @@
 /*
  * LuxRoom Purchase Confidence Layer — 2026-09-14
  * Structural commerce extension governed by the UIUX Factory design contract.
- * Prototype persistence is intentionally localStorage-only and labelled in the UI.
+ * Prototype persistence lives in the demo store (sessionStorage for this tab) and is labelled in the UI.
  */
 (() => {
   const app = window.LuxRoom;
@@ -17,8 +17,11 @@
 
   const STORAGE = {
     compare: "luxroom-compare",
-    savedRoom: "luxroom-saved-room",
+    savedRoom: "luxroom-saved-room", // legacy single-room key, migrated into savedRooms
+    savedRooms: "luxroom-saved-rooms",
+    activeRoom: "luxroom-active-room",
   };
+  const ROOM_TYPES = ["Living", "Dining", "Bedroom", "Office", "Bathroom"];
   const MAX_COMPARE = 3;
   const DEFAULT_ROOM = {
     room: "Living",
@@ -28,16 +31,11 @@
   };
 
   function readJson(key, fallback) {
-    try {
-      const value = JSON.parse(localStorage.getItem(key) || "null");
-      return value ?? fallback;
-    } catch {
-      return fallback;
-    }
+    return app.store ? app.store.get(key, fallback) : fallback;
   }
 
   function writeJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    app.store?.set(key, value);
     return value;
   }
 
@@ -65,12 +63,12 @@
 
   function warrantyGuidance(product) {
     if (product.category === "Lighting") {
-      return "Prototype policy · 2 years electrical / finish";
+      return "Prototype policy: 2 years electrical / finish";
     }
     if (product.materialGroup === "Textile") {
-      return "Prototype policy · 5 years structural / 2 years upholstery";
+      return "Prototype policy: 5 years structural / 2 years upholstery";
     }
-    return "Prototype policy · 5 years structural / 2 years finish";
+    return "Prototype policy: 5 years structural / 2 years finish";
   }
 
   app.products.forEach((product) => {
@@ -126,8 +124,12 @@
     const room = raw && typeof raw === "object" ? raw : {};
     const measurements = room.measurements && typeof room.measurements === "object" ? room.measurements : {};
     const items = Array.isArray(room.items) ? room.items : [];
+    const type = ROOM_TYPES.includes(room.type || room.room) ? (room.type || room.room) : DEFAULT_ROOM.room;
     return {
-      room: room.room || DEFAULT_ROOM.room,
+      id: String(room.id || "room-1"),
+      name: String(room.name || `${type} room`).trim() || `${type} room`,
+      type,
+      room: type,
       measurements: {
         ...DEFAULT_ROOM.measurements,
         ...measurements,
@@ -143,23 +145,100 @@
     };
   }
 
+  function migrateLegacyRoom() {
+    const legacy = readJson(STORAGE.savedRoom, null);
+    if (!legacy) return;
+    const rooms = readJson(STORAGE.savedRooms, []);
+    const activeId = readJson(STORAGE.activeRoom, null) || rooms[0]?.id || "room-1";
+    const migrated = normalizeSavedRoom({ ...legacy, id: activeId, name: rooms.find((room) => room.id === activeId)?.name });
+    writeJson(STORAGE.savedRooms, rooms.some((room) => room.id === activeId)
+      ? rooms.map((room) => room.id === activeId ? migrated : room)
+      : [migrated, ...rooms]);
+    writeJson(STORAGE.activeRoom, activeId);
+    app.store?.remove(STORAGE.savedRoom);
+  }
+
+  function listRooms() {
+    migrateLegacyRoom();
+    return readJson(STORAGE.savedRooms, []).map(normalizeSavedRoom);
+  }
+
+  function getActiveRoomId() {
+    const rooms = listRooms();
+    const id = readJson(STORAGE.activeRoom, null);
+    return rooms.some((room) => room.id === id) ? id : rooms[0]?.id || null;
+  }
+
   function getSavedRoom() {
-    return normalizeSavedRoom(readJson(STORAGE.savedRoom, DEFAULT_ROOM));
+    const rooms = listRooms();
+    const active = rooms.find((room) => room.id === getActiveRoomId());
+    return active || normalizeSavedRoom({ ...DEFAULT_ROOM, id: "room-1", name: "Living room" });
+  }
+
+  function emitRooms(room) {
+    document.dispatchEvent(new CustomEvent("luxroom-saved-room-updated", { detail: room }));
   }
 
   function persistSavedRoom(next) {
     const room = normalizeSavedRoom({ ...next, updatedAt: new Date().toISOString() });
-    writeJson(STORAGE.savedRoom, room);
-    document.dispatchEvent(new CustomEvent("luxroom-saved-room-updated", { detail: room }));
+    const rooms = listRooms();
+    writeJson(STORAGE.savedRooms, rooms.some((entry) => entry.id === room.id)
+      ? rooms.map((entry) => entry.id === room.id ? room : entry)
+      : [...rooms, room]);
+    if (!readJson(STORAGE.activeRoom, null)) writeJson(STORAGE.activeRoom, room.id);
+    emitRooms(room);
     return room;
   }
 
-  function saveMeasurements(measurements, roomName) {
+  function setActiveRoom(roomId) {
+    if (!listRooms().some((room) => room.id === roomId)) return getSavedRoom();
+    writeJson(STORAGE.activeRoom, roomId);
     const room = getSavedRoom();
-    room.room = roomName || room.room;
+    emitRooms(room);
+    return room;
+  }
+
+  function createRoom(name, type = "Living") {
+    const cleanName = String(name || "").trim();
+    if (!cleanName) throw new Error("Give the room a name, for example \"Guest bedroom\".");
+    if (cleanName.length > 40) throw new Error("Keep the room name under 40 characters.");
+    const rooms = listRooms();
+    if (rooms.some((room) => room.name.toLowerCase() === cleanName.toLowerCase())) throw new Error(`You already have a room called "${cleanName}".`);
+    const room = normalizeSavedRoom({ id: `room-${Date.now().toString(36)}`, name: cleanName, type, items: [], measurements: DEFAULT_ROOM.measurements });
+    writeJson(STORAGE.savedRooms, [...rooms, room]);
+    writeJson(STORAGE.activeRoom, room.id);
+    emitRooms(room);
+    return room;
+  }
+
+  function renameRoom(roomId, name) {
+    const cleanName = String(name || "").trim();
+    if (!cleanName) throw new Error("A room needs a name.");
+    if (cleanName.length > 40) throw new Error("Keep the room name under 40 characters.");
+    const rooms = listRooms();
+    if (rooms.some((room) => room.id !== roomId && room.name.toLowerCase() === cleanName.toLowerCase())) throw new Error(`You already have a room called "${cleanName}".`);
+    const room = rooms.find((entry) => entry.id === roomId);
+    if (!room) throw new Error("That room no longer exists.");
+    return persistSavedRoom({ ...room, name: cleanName });
+  }
+
+  function deleteRoom(roomId) {
+    const rooms = listRooms();
+    const room = rooms.find((entry) => entry.id === roomId);
+    if (!room) throw new Error("That room no longer exists.");
+    const remaining = rooms.filter((entry) => entry.id !== roomId);
+    writeJson(STORAGE.savedRooms, remaining);
+    if (readJson(STORAGE.activeRoom, null) === roomId) writeJson(STORAGE.activeRoom, remaining[0]?.id || null);
+    emitRooms(remaining[0] || null);
+    return room;
+  }
+
+  function saveMeasurements(measurements, roomType) {
+    const room = getSavedRoom();
+    room.type = ROOM_TYPES.includes(roomType) ? roomType : room.type;
     room.measurements = { ...room.measurements, ...measurements };
     const next = persistSavedRoom(room);
-    app.showToast?.("Room measurements saved in this browser.");
+    app.showToast?.(`Measurements saved to ${next.name}.`);
     return next;
   }
 
@@ -177,14 +256,17 @@
     if (existing) Object.assign(existing, item);
     else room.items.push(item);
     const next = persistSavedRoom(room);
-    app.showToast?.(`${product.name} saved to ${next.room}.`);
+    app.showToast?.(`${product.name} saved to ${next.name}.`);
     return next;
   }
 
   function removeRoomItem(productId) {
     const room = getSavedRoom();
+    const product = app.getProduct(Number(productId));
     room.items = room.items.filter((item) => item.productId !== Number(productId));
-    return persistSavedRoom(room);
+    const next = persistSavedRoom(room);
+    if (product) app.showToast?.(`${product.name} removed from ${next.name}.`);
+    return next;
   }
 
   function getFitGuidance(product, measurements) {
@@ -247,7 +329,7 @@
   function returnabilityLabel(product) {
     return product.returnable
       ? "14-day return request"
-      : "Made to order · confirm before production";
+      : "Made to order, confirm before production";
   }
 
   function roomDecisionSummary(room, entries) {
@@ -366,8 +448,8 @@
     strip.setAttribute("aria-label", "Purchase confidence tools");
     strip.innerHTML = `
       <p><span class="clay-point" aria-hidden="true"></span> Decision workbench</p>
-      <a href="compare.html"><strong>Compare <span data-compare-count>${getCompareIds().length}</span>/3</strong><small>Dimensions · finish · lead time</small><span aria-hidden="true">↗</span></a>
-      <a href="saved-room.html"><strong>Saved room</strong><small>Browser-only prototype state</small><span aria-hidden="true">↗</span></a>
+      <a href="compare.html"><strong>Compare <span data-compare-count>${getCompareIds().length}</span>/3</strong><small>Dimensions, finish and lead time</small><span aria-hidden="true">↗</span></a>
+      <a href="saved-room.html"><strong>Saved rooms</strong><small>Kept in this browser tab</small><span aria-hidden="true">↗</span></a>
       <a href="detail.html?product=8#will-it-fit"><strong>Will it fit?</strong><small>Room + doorway guidance</small><span aria-hidden="true">↗</span></a>`;
     results.before(strip);
     enhanceProductCards(document);
@@ -389,7 +471,7 @@
       <figure class="technical-drawing" aria-labelledby="technical-drawing-title">
         <figcaption>
           <span class="object-index">Technical drawing / prototype</span>
-          <strong id="technical-drawing-title">${escapeHtml(product.name)} · elevation + plan</strong>
+          <strong id="technical-drawing-title">${escapeHtml(product.name)}: elevation + plan</strong>
           <small>Not for construction. Confirm final dimensions and delivery access before purchase.</small>
         </figcaption>
         <svg viewBox="0 0 820 360" role="img" aria-label="Prototype technical drawing for ${escapeHtml(product.name)}">
@@ -546,7 +628,7 @@
         const result = document.querySelector("#fit-result");
         if (!result) return;
         result.dataset.status = guidance.status;
-        result.innerHTML = `<span class="fit-result__status">${escapeHtml(guidance.label)}</span><strong>${escapeHtml(product.name)} · ${formatDimensions(product)}</strong><p>${escapeHtml(guidance.detail)}</p>`;
+        result.innerHTML = `<span class="fit-result__status">${escapeHtml(guidance.label)}</span><strong>${escapeHtml(product.name)}, ${formatDimensions(product)}</strong><p>${escapeHtml(guidance.detail)}</p>`;
       };
       fitForm.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -579,7 +661,7 @@
     if (summary) summary.textContent = `${products.length} of ${MAX_COMPARE} products selected`;
 
     if (!products.length) {
-      grid.innerHTML = `<div class="confidence-empty"><p class="object-index">Comparison / empty</p><h2>Choose two pieces<br />to make the trade-offs visible.</h2><p>Add products from the collection. Your selection stays in this browser only.</p><a class="primary-button" href="products.html">Explore collection ↗</a></div>`;
+      grid.innerHTML = `<div class="confidence-empty"><p class="object-index">Comparison / empty</p><h2>Choose two pieces<br />to make the trade-offs visible.</h2><p>Add products from the collection. Your selection stays in this browser tab only.</p><a class="primary-button" href="products.html">Explore collection ↗</a></div>`;
       return;
     }
 
@@ -607,7 +689,7 @@
         ${products.map((product) => `
           <article class="compare-product-head">
             <a href="detail.html?product=${product.id}" class="compare-product-head__image" style="background-image:url('${escapeHtml(product.image)}')" aria-label="View ${escapeHtml(product.name)}"></a>
-            <div><span>${escapeHtml(product.collection)}</span><h2>${escapeHtml(product.name)}</h2><p>${app.formatMoney(selectedVariant(product).price)} · ${escapeHtml(selectedVariant(product).finish)}</p></div>
+            <div><span>${escapeHtml(product.collection)}</span><h2>${escapeHtml(product.name)}</h2><p>${app.formatMoney(selectedVariant(product).price)}, ${escapeHtml(selectedVariant(product).finish)}</p></div>
             <button type="button" data-remove-compare="${product.id}">Remove</button>
           </article>`).join("")}
         ${rows.map(([label, getValue]) => `
@@ -616,13 +698,31 @@
         `).join("")}
       </div>
       <div class="compare-next">
-        <p><strong>${products.length < 2 ? "Add one more product to make comparison useful." : "Trade-offs visible. Now check the room."}</strong><span>Prototype comparison state is stored only in this browser.</span></p>
+        <p><strong>${products.length < 2 ? "Add one more product to make comparison useful." : "Trade-offs visible. Now check the room."}</strong><span>Comparison is stored only in this browser tab.</span></p>
         <div><a href="products.html" class="secondary-button">${products.length < MAX_COMPARE ? "Add another product" : "Back to collection"} ↗</a><a href="saved-room.html" class="text-link">Open saved room ↗</a></div>
       </div>`;
   }
 
+  function renderRoomsBar() {
+    const tabs = document.querySelector("#saved-rooms-tabs");
+    if (!tabs) return;
+    const rooms = listRooms();
+    const activeId = getActiveRoomId();
+    const hasRooms = rooms.length > 0;
+    tabs.innerHTML = hasRooms
+      ? rooms.map((room) => `<button type="button" class="saved-rooms-tab" data-select-room="${escapeHtml(room.id)}" aria-pressed="${room.id === activeId}"><strong>${escapeHtml(room.name)}</strong><small>${room.items.length} ${room.items.length === 1 ? "piece" : "pieces"}</small></button>`).join("")
+      : '<p class="saved-rooms-empty">No saved rooms yet. Name your first room to start keeping pieces and measurements together.</p>';
+    const active = rooms.find((room) => room.id === activeId);
+    const renameInput = document.querySelector("#room-rename-name");
+    if (renameInput && document.activeElement !== renameInput) renameInput.value = active?.name || "";
+    document.querySelectorAll("[data-requires-room]").forEach((node) => { node.hidden = !hasRooms; });
+    const deleteButton = document.querySelector("#room-delete");
+    if (deleteButton && deleteButton.dataset.confirming !== "true") deleteButton.textContent = active ? `Delete "${active.name}"` : "Delete room";
+  }
+
   function renderSavedRoom() {
     if (!document.body.classList.contains("saved-room-page")) return;
+    renderRoomsBar();
     const room = getSavedRoom();
     const roomSelect = document.querySelector("#saved-room-type");
     if (roomSelect) roomSelect.value = room.room;
@@ -661,7 +761,7 @@
           <div class="saved-room-item__copy">
             <span class="object-index">${String(index + 1).padStart(2, "0")} / ${escapeHtml(product.category)}</span>
             <h2>${escapeHtml(product.name)}</h2>
-            <p>${formatDimensions(product)}<br />${escapeHtml(variant.finish)} · ${escapeHtml(variant.material)}</p>
+            <p>${formatDimensions(product)}<br />${escapeHtml(variant.finish)}, ${escapeHtml(variant.material)}</p>
             <dl class="saved-room-item__evidence">
               <div><dt>Room fit</dt><dd data-fit-status="${escapeHtml(fit?.status || "pending")}">${escapeHtml(fit?.label || "Save measurements to check")}</dd></div>
               <div><dt>Timing</dt><dd>${variant.leadTimeMin}–${variant.leadTimeMax} days</dd></div>
@@ -771,7 +871,7 @@
     }).filter(({ product }) => product);
 
     const measurementText = measurements.width && measurements.depth
-      ? `${measurements.width} × ${measurements.depth} cm room${measurements.doorway ? ` · ${measurements.doorway} cm doorway` : ""}${measurements.clearance ? ` · ${measurements.clearance} cm desired clearance` : ""}`
+      ? `${measurements.width} × ${measurements.depth} cm room${measurements.doorway ? `, ${measurements.doorway} cm doorway` : ""}${measurements.clearance ? `, ${measurements.clearance} cm desired clearance` : ""}`
       : "Measurements not yet confirmed";
     const piecesText = pieces.length
       ? pieces.map(({ product, variant }) => `${product.name}${variant?.finish ? ` — ${variant.finish}` : ""}`).join("; ")
@@ -810,9 +910,81 @@
     roomSelect?.addEventListener("change", () => {
       const room = getSavedRoom();
       room.room = roomSelect.value;
+      room.type = roomSelect.value;
       persistSavedRoom(room);
       renderSavedRoom();
     });
+
+    const status = document.querySelector("#room-status");
+    const setStatus = (message, state = "success") => {
+      if (!status) return;
+      status.textContent = message;
+      status.dataset.state = state;
+    };
+    const runRoomAction = (action, successMessage) => {
+      try {
+        const result = action();
+        setStatus(typeof successMessage === "function" ? successMessage(result) : successMessage, "success");
+        renderSavedRoom();
+        return true;
+      } catch (error) {
+        setStatus(error.message, "error");
+        return false;
+      }
+    };
+
+    document.querySelector("#saved-rooms-tabs")?.addEventListener("click", (event) => {
+      const tab = event.target.closest("[data-select-room]");
+      if (!tab) return;
+      const room = setActiveRoom(tab.dataset.selectRoom);
+      setStatus(`Showing ${room.name}.`);
+      renderSavedRoom();
+    });
+
+    const createForm = document.querySelector("#room-create-form");
+    createForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = createForm.querySelector("input[name='name']");
+      const type = createForm.querySelector("select[name='type']")?.value || "Living";
+      if (runRoomAction(() => createRoom(input.value, type), (room) => `${room.name} created. Save pieces from the collection to fill it.`)) {
+        createForm.reset();
+      }
+    });
+
+    const renameForm = document.querySelector("#room-rename-form");
+    renameForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = renameForm.querySelector("input[name='name']");
+      runRoomAction(() => renameRoom(getActiveRoomId(), input.value), (room) => `Room renamed to ${room.name}.`);
+    });
+
+    const deleteButton = document.querySelector("#room-delete");
+    const cancelDelete = document.querySelector("#room-delete-cancel");
+    const resetDelete = () => {
+      if (!deleteButton) return;
+      deleteButton.dataset.confirming = "false";
+      if (cancelDelete) cancelDelete.hidden = true;
+      renderRoomsBar();
+    };
+    deleteButton?.addEventListener("click", () => {
+      const room = getSavedRoom();
+      if (deleteButton.dataset.confirming !== "true") {
+        deleteButton.dataset.confirming = "true";
+        deleteButton.textContent = `Confirm: delete "${room.name}" and its ${room.items.length} ${room.items.length === 1 ? "piece" : "pieces"}`;
+        if (cancelDelete) cancelDelete.hidden = false;
+        setStatus("Deleting a room cannot be undone. Confirm or keep it.", "warning");
+        return;
+      }
+      deleteButton.dataset.confirming = "false";
+      if (cancelDelete) cancelDelete.hidden = true;
+      runRoomAction(() => deleteRoom(room.id), (removed) => `${removed.name} deleted.`);
+    });
+    cancelDelete?.addEventListener("click", () => {
+      resetDelete();
+      setStatus("Room kept.");
+    });
+
+    document.addEventListener("luxroom-saved-room-updated", () => renderRoomsBar());
     renderSavedRoom();
   }
 
@@ -820,7 +992,13 @@
     getCompareIds,
     toggleCompare,
     getSavedRoom,
+    listRooms,
+    createRoom,
+    renameRoom,
+    deleteRoom,
+    setActiveRoom,
     saveRoomItem,
+    removeRoomItem,
     saveMeasurements,
     getFitGuidance,
   };

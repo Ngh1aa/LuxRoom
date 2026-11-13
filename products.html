@@ -9,15 +9,16 @@
   <link href="css/design-system.css" rel="stylesheet" />
   <link href="css/common.css" rel="stylesheet" />
   <link href="css/products.css?v=20260901-workbench" rel="stylesheet" />
+  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
 </head>
 <body class="collection-page" id="top">
   <header class="topbar" aria-label="Primary navigation">
-    <a class="brand" href="index.html" aria-label="LuxRoom home"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
+    <a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
     <nav aria-label="Main menu" class="main-nav"><a href="index.html">Home</a><a class="active" href="products.html">Collection</a><a href="about.html">Our story</a><a href="contact.html">Contact</a></nav>
     <div class="topbar-actions">
       <button aria-label="Search" class="icon-button" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
-      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" data-cart-count style="display:none">0</span></a>
-      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" data-wishlist-count style="display:none">0</span></a>
+      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span></a>
+      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span></a>
       <a aria-label="Account" class="icon-button" href="auth.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
     </div>
   </header>
@@ -34,7 +35,7 @@
         <div class="collection-brief-row"><span>01</span><div><strong>By object</strong><p>Start with seating, tables, lighting or storage.</p></div></div>
         <div class="collection-brief-row"><span>02</span><div><strong>By room</strong><p>Match scale and use to Living, Dining, Bedroom, Office or Bath.</p></div></div>
         <div class="collection-brief-row"><span>03</span><div><strong>By constraint</strong><p>Filter size, material, availability, lead time and investment.</p></div></div>
-        <button class="collection-search-trigger" type="button" aria-label="Search">Search the edit <span aria-hidden="true">⌕</span></button>
+        <button class="collection-search-trigger" type="button">Search the edit <span aria-hidden="true">⌕</span></button>
       </aside>
     </section>
 
@@ -52,6 +53,7 @@
       <div class="collection-tools-label"><span class="clay-point" aria-hidden="true"></span><p>Find the piece that fits the room — not just the mood.</p></div>
       <div class="filter-toolbar">
         <button aria-controls="collection-refine" aria-expanded="true" class="filter-toggle" type="button"><span>Filter</span><span aria-hidden="true" class="filter-toggle-icon">−</span></button>
+        <form class="collection-search" role="search" aria-label="Search the collection"><label class="sr-only" for="collection-search-input">Search the collection</label><input id="collection-search-input" type="search" placeholder="Search name, material or room" autocomplete="off" /></form>
         <div aria-live="polite" class="active-filters"><span class="active-chip empty-chip">17 objects available</span></div>
         <label class="sort-control" for="collection-sort"><span>Sort</span><select aria-label="Order products" id="collection-sort"><option value="curated">Curated order</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name: A to Z</option></select></label>
       </div>
@@ -86,8 +88,8 @@
   </main>
 
   <footer class="site-shell footer"></footer>
-  <div class="search-overlay" id="global-search-overlay" aria-hidden="true"><div class="search-modal" role="dialog" aria-modal="true" aria-label="Search LuxRoom"><div class="search-input-wrapper"><svg class="search-modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input autocomplete="off" id="global-search-input" placeholder="Search by object, material or room" type="text" /><button class="icon-button" id="close-search" type="button" aria-label="Close search">×</button></div></div></div>
-  <script src="js/common.js?v=ux-20260823-1"></script>
+  <div class="search-overlay" id="global-search-overlay" aria-hidden="true"><div class="search-modal" role="dialog" aria-modal="true" aria-label="Search LuxRoom"><div class="search-input-wrapper"><svg class="search-modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input autocomplete="off" id="global-search-input" placeholder="Search by object, material or room" type="text" /><button class="icon-button" id="close-search" type="button" aria-label="Close search"><span aria-hidden="true">×</span></button></div></div></div>
+  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/products.js?v=ux-20260823-1"></script>
   <script src="js/ui-feedback-init.js?v=0.13.0" type="module"></script>
 </body>

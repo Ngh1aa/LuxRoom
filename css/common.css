@@ -162,7 +162,7 @@ em { font-weight: 400; }
   background: var(--clay);
   color: var(--paper);
   border-radius: 50%;
-  font: 600 .55rem/1 var(--font-ui);
+  font: 600 .75rem/1 var(--font-ui);
 }
 
 .mobile-menu-toggle { display: none; }

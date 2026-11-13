@@ -9,15 +9,16 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/tracking.css" />
+  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
 </head>
 <body class="tracking-page">
   <header class="topbar" aria-label="Primary navigation">
-    <a class="brand" href="index.html" aria-label="LuxRoom home"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
+    <a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
     <nav class="main-nav" aria-label="Main menu"><a href="index.html">Home</a><a href="products.html">Collection</a><a href="about.html">Our story</a><a href="contact.html">Contact</a></nav>
     <div class="topbar-actions">
       <button aria-label="Search" class="icon-button" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
-      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" data-cart-count style="display:none">0</span></a>
-      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" data-wishlist-count style="display:none">0</span></a>
+      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span></a>
+      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span></a>
       <a aria-label="Account" class="icon-button" href="auth.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
     </div>
   </header>
@@ -29,24 +30,40 @@
       <div class="tracking-hero-meta"><div><span>Current status</span><strong id="tracking-current-status">Confirmed</strong></div><div><span>Estimated arrival</span><strong id="tracking-arrival">—</strong></div></div>
     </section>
 
-    <section class="tracking-layout" id="tracking-content">
+    <section class="tracking-lookup" id="tracking-lookup" aria-labelledby="tracking-lookup-title">
+      <div>
+        <p class="eyebrow">Find an order</p>
+        <h2 id="tracking-lookup-title">Look up a demo order</h2>
+        <p>Enter the order number from your confirmation and the email used at checkout. Try <strong>LR-DEMO-0115</strong> with <strong>demo@luxroom.com</strong>.</p>
+      </div>
+      <form class="tracking-lookup__form" id="tracking-lookup-form" novalidate>
+        <div class="form-group"><label for="lookup-order">Order number</label><input id="lookup-order" name="order" type="text" autocomplete="off" required placeholder="LR-123456" /></div>
+        <div class="form-group"><label for="lookup-email">Email address</label><input id="lookup-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
+        <button class="primary-button" type="submit">Find order <span aria-hidden="true">↗</span></button>
+        <p class="form-status" id="tracking-lookup-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="tracking-layout" id="tracking-content" hidden>
       <div class="tracking-journey">
         <p class="eyebrow">Delivery journey</p>
+        <p class="tracking-demo-note">Demo order. Statuses are simulated and nothing is shipped.</p>
         <ol id="tracking-timeline"></ol>
+        <div class="tracking-request" id="tracking-request"></div>
       </div>
       <aside class="tracking-order-card">
         <p class="eyebrow">Order details</p>
         <div id="tracking-items" class="tracking-items"></div>
-        <dl class="tracking-facts"><div><dt>Delivery</dt><dd id="tracking-delivery">—</dd></div><div><dt>Address</dt><dd id="tracking-address">—</dd></div><div><dt>Payment</dt><dd id="tracking-payment">—</dd></div><div><dt>Total</dt><dd id="tracking-total">—</dd></div></dl>
-        <a class="secondary-button" href="contact.html">Ask the room team</a>
+        <dl class="tracking-facts"><div><dt>Delivery</dt><dd id="tracking-delivery">—</dd></div><div><dt>Slot</dt><dd id="tracking-slot">—</dd></div><div><dt>Address</dt><dd id="tracking-address">—</dd></div><div><dt>Payment</dt><dd id="tracking-payment">—</dd></div><div><dt>Total</dt><dd id="tracking-total">—</dd></div></dl>
+        <a class="secondary-button" href="contact.html?topic=delivery">Ask the room team</a>
       </aside>
     </section>
 
-    <section class="tracking-empty" id="tracking-empty" hidden><p class="eyebrow">No order found</p><h2>The journey has not begun.</h2><p>Return to the collection or use the link from your order confirmation.</p><a class="primary-button" href="products.html">Explore pieces <span aria-hidden="true">↗</span></a></section>
+    <section class="tracking-empty" id="tracking-empty" hidden><p class="eyebrow">No order found</p><h2>The journey has not begun.</h2><p id="tracking-empty-copy">Check the order number and email, or return to the collection.</p><a class="primary-button" href="products.html">Explore pieces <span aria-hidden="true">↗</span></a></section>
   </main>
 
   <footer class="site-shell footer"></footer>
-  <script src="js/common.js?v=ux-20260823-1"></script>
+  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/tracking.js?v=ux-20260823-1"></script>
   <script type="module" src="js/ui-feedback-init.js?v=0.13.0"></script>
 </body>

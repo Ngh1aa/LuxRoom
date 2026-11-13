@@ -5,6 +5,7 @@ const collectionCountLabel = document.querySelector("#collection-count-label");
 const itemsPerPage = 9;
 
 let currentPage = 1;
+let catalogueReady = false;
 
 const activeFilters = {
   category: "All",
@@ -157,7 +158,7 @@ function updateCollectionCount(totalItems) {
 }
 
 function renderProducts() {
-  if (!productGrid) return;
+  if (!productGrid || !catalogueReady) return;
 
   const filtered = getFilteredProducts();
   const totalItems = filtered.length;
@@ -175,7 +176,8 @@ function renderProducts() {
   const currentProducts = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   if (totalItems === 0) {
-          productGrid.innerHTML = '<div class="empty-results"><p class="eyebrow">The current selection</p><h2>A quieter edit for now.</h2><p>No objects match this combination. Clear one filter and the room will open up again.</p><button class="clear-filters-btn" onclick="window.clearFilters()" type="button">Reset the edit <span aria-hidden="true">↗</span></button></div>';
+    const searchNote = activeFilters.search ? ` for “${window.LuxRoom.escapeHtml(activeFilters.search)}”` : "";
+    productGrid.innerHTML = `<div class="empty-results"><p class="eyebrow">The current selection</p><h2>A quieter edit for now.</h2><p>No objects match this combination${searchNote}. Clear one filter or try another word and the room will open up again.</p><button class="clear-filters-btn" onclick="window.clearFilters()" type="button">Reset the edit <span aria-hidden="true">↗</span></button></div>`;
 
   } else {
     productGrid.innerHTML = currentProducts.map((product, index) => `
@@ -193,7 +195,7 @@ function renderProducts() {
             <div class="product-meta-row">
               <h3>${product.name}</h3>
               <span class="price">$${product.price}</span>
-              <span class="product-fit-meta">${product.dimensions.width} × ${product.dimensions.depth} cm · ${product.variants.length} ${product.variants.length === 1 ? "finish" : "finishes"}</span>
+              <span class="product-fit-meta">${product.dimensions.width} × ${product.dimensions.depth} cm, ${product.variants.length} ${product.variants.length === 1 ? "finish" : "finishes"}</span>
             </div>
             <div class="product-actions-row">
               <button class="add-to-cart-action" type="button" data-product-id="${product.id}" aria-label="Add ${product.name} to cart">
@@ -206,6 +208,8 @@ function renderProducts() {
     `).join("");
   }
 
+  const searchField = document.querySelector("#collection-search-input");
+  if (searchField && document.activeElement !== searchField) searchField.value = activeFilters.search || "";
   renderPagination(totalPages);
   updateCategoryControls();
   updateCollectionCount(totalItems);
@@ -255,6 +259,8 @@ window.clearFilters = function clearFilters() {
   const rangeMin = document.querySelector(".range-min");
   const rangeMax = document.querySelector(".range-max");
   const sortSelect = document.querySelector("#collection-sort");
+  const searchInput = document.querySelector("#collection-search-input");
+  if (searchInput) searchInput.value = "";
   if (rangeMin) rangeMin.value = "0";
   if (rangeMax) rangeMax.value = "1000";
   if (sortSelect) sortSelect.value = "curated";
@@ -520,8 +526,51 @@ function applyUrlFilters() {
   return applied;
 }
 
+function catalogueSkeleton() {
+  return `<div class="catalogue-loading" role="status"><span class="sr-only">Loading the collection…</span>${Array.from({ length: 6 }, () => '<div class="catalogue-skeleton" aria-hidden="true"><span></span><i></i><i></i></div>').join("")}</div>`;
+}
+
+async function loadCatalogue() {
+  if (!productGrid) return;
+  catalogueReady = false;
+  productGrid.setAttribute("aria-busy", "true");
+  productGrid.innerHTML = catalogueSkeleton();
+  if (paginationContainer) paginationContainer.innerHTML = "";
+  try {
+    await window.LuxRoom.request(() => window.LuxRoom.products.length, { label: "Loading the collection", delay: 320 });
+    catalogueReady = true;
+    renderProducts();
+  } catch (error) {
+    productGrid.innerHTML = `<div class="empty-results catalogue-error" role="alert"><p class="eyebrow">Collection unavailable</p><h2>The collection did not load.</h2><p>${window.LuxRoom.escapeHtml(error.message)}</p><button class="clear-filters-btn" id="catalogue-retry" type="button">Try again <span aria-hidden="true">↗</span></button></div>`;
+    productGrid.querySelector("#catalogue-retry")?.addEventListener("click", loadCatalogue);
+  } finally {
+    productGrid.removeAttribute("aria-busy");
+  }
+}
+
+const collectionSearch = document.querySelector("#collection-search-input");
+if (collectionSearch) {
+  let searchTimer = 0;
+  collectionSearch.value = activeFilters.search || "";
+  collectionSearch.addEventListener("input", () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => {
+      const value = collectionSearch.value.trim();
+      activeFilters.search = value || null;
+      const url = new URL(window.location.href);
+      if (value) url.searchParams.set("search", value);
+      else url.searchParams.delete("search");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+      currentPage = 1;
+      renderProducts();
+    }, 180);
+  });
+  collectionSearch.closest("form")?.addEventListener("submit", (event) => event.preventDefault());
+}
+
 const urlFilterApplied = applyUrlFilters();
 currentPage = urlFilterApplied ? 1 : currentPage;
-renderProducts();
-window.addEventListener("wishlist-updated", window.LuxRoom.refreshWishlistState);
+if (collectionSearch) collectionSearch.value = activeFilters.search || "";
+loadCatalogue();
+document.addEventListener("wishlist-updated", window.LuxRoom.refreshWishlistState);
 window.LuxRoom.refreshWishlistState();

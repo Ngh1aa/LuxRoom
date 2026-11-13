@@ -1,3 +1,292 @@
+/*
+ * Demo store persistence. There is no server: every piece of user data lives in
+ * sessionStorage for this tab, seeded once from js/store-data.js (window.LUXROOM_SEED).
+ * When sessionStorage is unavailable (private mode, Node QA harness) an in-memory
+ * map keeps the page working for the current view.
+ */
+const STORE_KEYS = {
+  seeded: "luxroom-seeded",
+  cart: "luxroom-cart-items",
+  savedForLater: "luxroom-saved-for-later",
+  wishlist: "luxroom-wishlist",
+  compare: "luxroom-compare",
+  savedRooms: "luxroom-saved-rooms",
+  activeRoom: "luxroom-active-room",
+  delivery: "luxroom-delivery-preferences",
+  promo: "luxroom-promo",
+  orders: "luxroom-orders",
+  lastOrder: "luxroom-last-order",
+  users: "luxroom-users",
+  session: "luxroom-session",
+  addresses: "luxroom-addresses",
+  reviews: "luxroom-reviews",
+  recentlyViewed: "luxroom-recently-viewed",
+  failNext: "luxroom-fail-next",
+  flash: "luxroom-flash",
+};
+
+const memoryStore = new Map();
+const sessionBackend = (() => {
+  try {
+    const candidate = window.sessionStorage || (typeof sessionStorage !== "undefined" ? sessionStorage : null);
+    if (!candidate) return null;
+    candidate.setItem("luxroom-probe", "1");
+    candidate.removeItem("luxroom-probe");
+    return candidate;
+  } catch {
+    return null;
+  }
+})();
+
+const store = {
+  get(key, fallback = null) {
+    try {
+      const raw = sessionBackend ? sessionBackend.getItem(key) : (memoryStore.has(key) ? memoryStore.get(key) : null);
+      if (raw === null || raw === undefined) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed ?? fallback;
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    const raw = JSON.stringify(value);
+    try {
+      if (sessionBackend) sessionBackend.setItem(key, raw);
+      else memoryStore.set(key, raw);
+    } catch {
+      memoryStore.set(key, raw);
+    }
+    return value;
+  },
+  remove(key) {
+    try { sessionBackend?.removeItem(key); } catch { /* ignore */ }
+    memoryStore.delete(key);
+  },
+  keys() {
+    if (!sessionBackend) return Array.from(memoryStore.keys());
+    const keys = [];
+    for (let index = 0; index < sessionBackend.length; index += 1) keys.push(sessionBackend.key(index));
+    return keys;
+  },
+};
+
+function cloneSeed(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function seedStore(force = false) {
+  const seed = window.LUXROOM_SEED;
+  if (!seed) return false;
+  if (!force && store.get(STORE_KEYS.seeded)) return false;
+  store.keys().filter((key) => key && key.startsWith("luxroom-")).forEach((key) => store.remove(key));
+  const daysAgo = (days) => new Date(Date.now() - (Number(days) || 0) * 86400000).toISOString();
+  store.set(STORE_KEYS.users, cloneSeed(seed.users) || []);
+  store.set(STORE_KEYS.session, seed.session ?? null);
+  store.set(STORE_KEYS.addresses, cloneSeed(seed.addresses) || []);
+  store.set(STORE_KEYS.orders, (cloneSeed(seed.orders) || []).map((order) => {
+    const { daysAgo: age, ...rest } = order;
+    const createdAt = rest.createdAt || daysAgo(age);
+    const delivery = { ...rest.delivery };
+    if (delivery.deliveredDaysAgo !== undefined) {
+      delivery.deliveredAt = daysAgo(delivery.deliveredDaysAgo);
+      delete delivery.deliveredDaysAgo;
+    }
+    return { ...rest, createdAt, delivery, seeded: true };
+  }));
+  store.set(STORE_KEYS.cart, cloneSeed(seed.cart) || []);
+  store.set(STORE_KEYS.savedForLater, cloneSeed(seed.savedForLater) || []);
+  store.set(STORE_KEYS.wishlist, cloneSeed(seed.wishlist) || []);
+  store.set(STORE_KEYS.compare, cloneSeed(seed.compare) || []);
+  store.set(STORE_KEYS.savedRooms, cloneSeed(seed.savedRooms) || []);
+  store.set(STORE_KEYS.activeRoom, seed.activeRoomId || null);
+  store.set(STORE_KEYS.reviews, cloneSeed(seed.reviews) || {});
+  store.set(STORE_KEYS.recentlyViewed, cloneSeed(seed.recentlyViewed) || []);
+  store.set(STORE_KEYS.seeded, seed.version || 1);
+  return true;
+}
+
+seedStore();
+
+function getPromoCatalogue() {
+  return window.LUXROOM_SEED?.promoCodes || {};
+}
+
+/*
+ * Simulated network. Every write that would hit a server goes through here so the
+ * UI can show a loading state, and "Fail the next request" in the footer can prove
+ * that every flow recovers from an error.
+ */
+function isFailureArmed() {
+  return store.get(STORE_KEYS.failNext, false) === true;
+}
+
+function setFailureArmed(armed) {
+  if (armed) store.set(STORE_KEYS.failNext, true);
+  else store.remove(STORE_KEYS.failNext);
+  document.dispatchEvent(new CustomEvent("luxroom-demo-updated"));
+}
+
+function simulateRequest(work, { delay = 420, label = "The request" } = {}) {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(() => {
+      if (isFailureArmed()) {
+        setFailureArmed(false);
+        const error = new Error(`${label} did not go through. The connection dropped (simulated failure). Nothing was changed. Please try again.`);
+        error.simulated = true;
+        reject(error);
+        return;
+      }
+      try {
+        resolve(typeof work === "function" ? work() : work);
+      } catch (error) {
+        reject(error);
+      }
+    }, delay);
+  });
+}
+
+function setFlashMessage(message) {
+  store.set(STORE_KEYS.flash, message);
+}
+
+function consumeFlashMessage() {
+  const message = store.get(STORE_KEYS.flash);
+  if (message) store.remove(STORE_KEYS.flash);
+  return message;
+}
+
+function resetDemoData() {
+  seedStore(true);
+  setFlashMessage("Demo data reset. The cart, account and orders are back to their starting state.");
+  window.location.reload();
+}
+
+/* Account (simulated: credentials never leave this tab). */
+function getUsers() {
+  return store.get(STORE_KEYS.users, []);
+}
+
+function getCurrentUser() {
+  const id = store.get(STORE_KEYS.session, null);
+  return id ? getUsers().find((user) => user.id === id) || null : null;
+}
+
+function publicUser(user) {
+  if (!user) return null;
+  const { password, ...rest } = user;
+  return rest;
+}
+
+function signIn(email, password) {
+  const normalized = String(email || "").trim().toLowerCase();
+  const user = getUsers().find((item) => item.email.toLowerCase() === normalized);
+  if (!user || user.password !== String(password || "")) {
+    throw new Error("That email and password do not match an account in this demo. Check both and try again.");
+  }
+  store.set(STORE_KEYS.session, user.id);
+  document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
+  return publicUser(user);
+}
+
+function signUp({ name, email, password }) {
+  const normalized = String(email || "").trim().toLowerCase();
+  if (!name?.trim()) throw new Error("Add your name to create an account.");
+  if (String(password || "").length < 8) throw new Error("Choose a password with at least 8 characters.");
+  const users = getUsers();
+  if (users.some((item) => item.email.toLowerCase() === normalized)) {
+    throw new Error("An account with this email already exists. Sign in instead, or reset the password.");
+  }
+  const user = { id: `u-${Date.now().toString(36)}`, name: name.trim(), email: normalized, password: String(password), phone: "", preferences: "" };
+  store.set(STORE_KEYS.users, [...users, user]);
+  store.set(STORE_KEYS.session, user.id);
+  document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
+  return publicUser(user);
+}
+
+function signOut() {
+  store.set(STORE_KEYS.session, null);
+  document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
+}
+
+function requestPasswordReset(email) {
+  const normalized = String(email || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw new Error("Enter the email address you use for LuxRoom.");
+  return { email: normalized };
+}
+
+function updateProfile(fields) {
+  const current = getCurrentUser();
+  if (!current) throw new Error("Sign in to edit your profile.");
+  const email = String(fields.email ?? current.email).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
+  if (getUsers().some((user) => user.id !== current.id && user.email.toLowerCase() === email)) {
+    throw new Error("Another account already uses this email.");
+  }
+  const next = { ...current, ...fields, email, name: String(fields.name ?? current.name).trim() || current.name };
+  store.set(STORE_KEYS.users, getUsers().map((user) => user.id === current.id ? next : user));
+  document.dispatchEvent(new CustomEvent("luxroom-account-updated"));
+  return publicUser(next);
+}
+
+/* Address book (per signed-in user). */
+function listAddresses() {
+  const user = getCurrentUser();
+  if (!user) return [];
+  return store.get(STORE_KEYS.addresses, []).filter((address) => address.userId === user.id);
+}
+
+function saveAddress(fields) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to save addresses.");
+  const required = ["fullName", "address", "ward", "district", "province"];
+  const missing = required.filter((key) => !String(fields[key] || "").trim());
+  if (missing.length) throw new Error("Complete the name, street, ward, district and province.");
+  const all = store.get(STORE_KEYS.addresses, []);
+  const mine = all.filter((address) => address.userId === user.id);
+  const id = fields.id || `addr-${Date.now().toString(36)}`;
+  const isDefault = fields.isDefault === true || mine.length === 0 || (mine.length === 1 && mine[0].id === id);
+  const record = {
+    id,
+    userId: user.id,
+    label: String(fields.label || "Address").trim() || "Address",
+    fullName: String(fields.fullName).trim(),
+    phone: String(fields.phone || "").trim(),
+    address: String(fields.address).trim(),
+    ward: String(fields.ward).trim(),
+    district: String(fields.district).trim(),
+    province: String(fields.province).trim(),
+    isDefault,
+  };
+  let next = all.some((address) => address.id === id)
+    ? all.map((address) => address.id === id ? record : address)
+    : [...all, record];
+  if (isDefault) next = next.map((address) => address.userId === user.id && address.id !== id ? { ...address, isDefault: false } : address);
+  store.set(STORE_KEYS.addresses, next);
+  return record;
+}
+
+function deleteAddress(id) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to manage addresses.");
+  const all = store.get(STORE_KEYS.addresses, []);
+  const removed = all.find((address) => address.id === id && address.userId === user.id);
+  if (!removed) throw new Error("That address no longer exists.");
+  let next = all.filter((address) => address.id !== id);
+  if (removed.isDefault) {
+    const firstMine = next.find((address) => address.userId === user.id);
+    if (firstMine) next = next.map((address) => address.id === firstMine.id ? { ...address, isDefault: true } : address);
+  }
+  store.set(STORE_KEYS.addresses, next);
+  return removed;
+}
+
+function setDefaultAddress(id) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to manage addresses.");
+  store.set(STORE_KEYS.addresses, store.get(STORE_KEYS.addresses, []).map((address) => address.userId === user.id ? { ...address, isDefault: address.id === id } : address));
+}
+
 const FINISH_LIBRARY = {
   "Olive bouclé": { material: "Bouclé", color: "Olive green", swatch: "#6a7458" },
   "Warm linen": { material: "Linen blend", color: "Cream", swatch: "#d9d0c2" },
@@ -77,8 +366,38 @@ function buildVariants(product) {
   });
 }
 
+const SIZE_LIBRARY = {
+  sofa: [
+    { sizeId: "compact", label: "Compact", widthDelta: -40, priceDelta: -40 },
+    { sizeId: "std", label: "Standard", widthDelta: 0, priceDelta: 0 },
+    { sizeId: "grand", label: "Grand", widthDelta: 50, priceDelta: 120 },
+  ],
+  table: [
+    { sizeId: "std", label: "Standard", widthDelta: 0, priceDelta: 0 },
+    { sizeId: "extended", label: "Extended", widthDelta: 40, priceDelta: 90 },
+  ],
+  bed: [
+    { sizeId: "std", label: "Queen", widthDelta: 0, priceDelta: 0 },
+    { sizeId: "king", label: "King", widthDelta: 20, priceDelta: 120 },
+  ],
+  rug: [
+    { sizeId: "small", label: "Medium", widthDelta: -40, priceDelta: -180, depthDelta: -70 },
+    { sizeId: "std", label: "Large", widthDelta: 0, priceDelta: 0 },
+  ],
+};
+
+function buildSizes(product) {
+  const options = SIZE_LIBRARY[product.dimensionType] || [{ sizeId: "std", label: "One size", widthDelta: 0, priceDelta: 0 }];
+  return options.map((option) => ({
+    ...option,
+    width: Number(product.dimensions.width) + option.widthDelta,
+    depth: Number(product.dimensions.depth) + (option.depthDelta || 0),
+  }));
+}
+
 const products = rawProducts.map((product) => ({
   ...product,
+  sizes: buildSizes(product),
   slug: product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
   deliveryType: product.oversized ? "Room delivery" : "Careful delivery",
   returnable: product.madeToOrder !== true,
@@ -148,11 +467,11 @@ function standardizeHeaderIcons() {
       </button>
       <a class="icon-button" href="cart.html" aria-label="Cart">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg>
-        <span class="cart-badge" data-cart-count style="display:none">0</span>
+        <span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span>
       </a>
       <a class="icon-button" href="wishlist.html" aria-label="Wishlist">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg>
-        <span class="cart-badge" data-wishlist-count style="display:none">0</span>
+        <span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span>
       </a>
       <a class="icon-button" href="auth.html" aria-label="Account">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -244,6 +563,16 @@ function initDiscoveryNavigation() {
 
 initDiscoveryNavigation();
 
+// Phones hide the wishlist and account icons (≤500px), so the menu carries those routes.
+function injectMobileAccountLinks() {
+  document.querySelectorAll(".main-nav").forEach((nav) => {
+    if (nav.querySelector(".nav-mobile-only")) return;
+    nav.insertAdjacentHTML("beforeend", '<a class="nav-mobile-only" href="wishlist.html">Wishlist</a><a class="nav-mobile-only" data-account-link href="auth.html">Account</a>');
+  });
+}
+
+injectMobileAccountLinks();
+
 function initMobileMenu() {
   document.querySelectorAll(".topbar").forEach((topbar) => {
     const nav = topbar.querySelector(".main-nav");
@@ -286,12 +615,7 @@ const DELIVERY_LOCATIONS = {
 };
 
 function readLocalJson(key, fallback) {
-  try {
-    const stored = JSON.parse(localStorage.getItem(key) || "null");
-    return stored ?? fallback;
-  } catch {
-    return fallback;
-  }
+  return store.get(key, fallback);
 }
 
 function getProduct(productId) {
@@ -303,21 +627,37 @@ function getVariant(product, variantId) {
   return product.variants.find((variant) => variant.variantId === String(variantId)) || product.variants[0];
 }
 
-function makeCartKey(productId, variantId) {
-  return `${Number(productId)}:${variantId}`;
+function getSize(product, sizeId) {
+  if (!product) return null;
+  return product.sizes.find((size) => size.sizeId === String(sizeId)) || product.sizes.find((size) => size.sizeId === "std") || product.sizes[0];
+}
+
+function getMaxQuantity(product, variant) {
+  if (!product || !variant) return 0;
+  return variant.stockStatus === "In stock" ? Math.max(1, Number(variant.stock) || 1) : 10;
+}
+
+function makeCartKey(productId, variantId, sizeId = "std") {
+  return sizeId && sizeId !== "std" ? `${Number(productId)}:${variantId}:${sizeId}` : `${Number(productId)}:${variantId}`;
 }
 
 function normalizeCartItem(item) {
   const product = getProduct(item.productId ?? item.id);
   if (!product) return null;
   const variant = getVariant(product, item.variantId);
+  const size = getSize(product, item.sizeId);
+  const maxQuantity = getMaxQuantity(product, variant);
   return {
-    key: makeCartKey(product.id, variant.variantId),
+    key: makeCartKey(product.id, variant.variantId, size.sizeId),
     productId: product.id,
     variantId: variant.variantId,
+    sizeId: size.sizeId,
+    sizeLabel: size.label,
+    width: size.width,
+    maxQuantity,
     sku: variant.sku,
     name: product.name,
-    price: Number(item.price ?? variant.price),
+    price: Number(item.price ?? (variant.price + size.priceDelta)),
     finish: item.finish || variant.finish,
     material: item.material || variant.material,
     color: item.color || variant.color,
@@ -327,21 +667,93 @@ function normalizeCartItem(item) {
     deliveryType: product.deliveryType,
     image: item.image || variant.images[0] || product.image,
     oversized: product.oversized === true,
-    quantity: Math.max(1, Number(item.quantity) || 1),
+    quantity: Math.min(maxQuantity, Math.max(1, Number(item.quantity) || 1)),
   };
 }
 
-let cartItems = readLocalJson("luxroom-cart-items", []).map(normalizeCartItem).filter(Boolean);
-let wishlistItems = readLocalJson("luxroom-wishlist", []).map(Number).filter((id) => getProduct(id));
+let cartItems = readLocalJson(STORE_KEYS.cart, []).map(normalizeCartItem).filter(Boolean);
+let savedForLater = readLocalJson(STORE_KEYS.savedForLater, []).map(normalizeCartItem).filter(Boolean);
+let wishlistItems = readLocalJson(STORE_KEYS.wishlist, []).map(Number).filter((id) => getProduct(id));
 let deliveryPreferences = {
   location: "hcm",
   method: "room",
-  ...readLocalJson("luxroom-delivery-preferences", {}),
+  ...readLocalJson(STORE_KEYS.delivery, {}),
 };
 
 function persistCart() {
-  localStorage.setItem("luxroom-cart-items", JSON.stringify(cartItems));
-  window.LuxRoom.cartItems = cartItems;
+  store.set(STORE_KEYS.cart, cartItems);
+  if (window.LuxRoom) window.LuxRoom.cartItems = cartItems;
+}
+
+function persistSavedForLater() {
+  store.set(STORE_KEYS.savedForLater, savedForLater);
+  if (window.LuxRoom) window.LuxRoom.savedForLater = savedForLater;
+}
+
+function moveToSavedForLater(itemKey) {
+  const item = cartItems.find((entry) => entry.key === itemKey);
+  if (!item) return null;
+  cartItems = cartItems.filter((entry) => entry.key !== itemKey);
+  savedForLater = [item, ...savedForLater.filter((entry) => entry.key !== itemKey)];
+  persistCart();
+  persistSavedForLater();
+  syncCartCount();
+  document.dispatchEvent(new Event("luxroom-cart-updated"));
+  return item;
+}
+
+function moveSavedToCart(itemKey) {
+  const item = savedForLater.find((entry) => entry.key === itemKey);
+  if (!item) return null;
+  savedForLater = savedForLater.filter((entry) => entry.key !== itemKey);
+  persistSavedForLater();
+  addToCart(item.productId, item.quantity, item.variantId, item.sizeId);
+  return item;
+}
+
+function removeSavedForLater(itemKey) {
+  savedForLater = savedForLater.filter((entry) => entry.key !== itemKey);
+  persistSavedForLater();
+  document.dispatchEvent(new Event("luxroom-cart-updated"));
+}
+
+function getAppliedPromo() {
+  const code = store.get(STORE_KEYS.promo, null);
+  const promo = code ? getPromoCatalogue()[code] : null;
+  return promo && !promo.expired ? { code, ...promo } : null;
+}
+
+function promoDiscount(promo, subtotal) {
+  if (!promo || subtotal <= 0) return 0;
+  if (promo.minSubtotal && subtotal < promo.minSubtotal) return 0;
+  if (promo.type === "percent") return Math.round(subtotal * promo.value / 100);
+  if (promo.type === "amount") return Math.min(subtotal, promo.value);
+  return 0;
+}
+
+function validatePromoCode(rawCode) {
+  const code = String(rawCode || "").trim().toUpperCase();
+  if (!code) throw new Error("Enter a promo code.");
+  const promo = getPromoCatalogue()[code];
+  if (!promo) throw new Error(`"${code}" is not a valid LuxRoom code. Check the spelling and try again.`);
+  if (promo.expired) throw new Error(`"${code}" has expired and can no longer be used.`);
+  const subtotal = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+  if (promo.minSubtotal && subtotal < promo.minSubtotal) {
+    throw new Error(`"${code}" needs ${formatMoney(promo.minSubtotal)} of objects in the cart. You have ${formatMoney(subtotal)}.`);
+  }
+  return { code, ...promo };
+}
+
+function applyPromoCode(rawCode) {
+  const promo = validatePromoCode(rawCode);
+  store.set(STORE_KEYS.promo, promo.code);
+  document.dispatchEvent(new Event("luxroom-cart-updated"));
+  return promo;
+}
+
+function removePromoCode() {
+  store.remove(STORE_KEYS.promo);
+  document.dispatchEvent(new Event("luxroom-cart-updated"));
 }
 
 function formatMoney(value) {
@@ -372,14 +784,16 @@ function getCartTotals(preferences = deliveryPreferences) {
   const location = DELIVERY_LOCATIONS[preferences.location] || DELIVERY_LOCATIONS.hcm;
   const placement = preferences.method === "placement" ? 45 : 0;
   const shipping = subtotal > 0 ? location.surcharge + placement : 0;
-  return { subtotal, shipping, total: subtotal + shipping };
+  const promo = getAppliedPromo();
+  const discount = promoDiscount(promo, subtotal);
+  return { subtotal, discount, promo: discount > 0 ? promo : null, shipping, total: subtotal - discount + shipping };
 }
 
 function updateDeliveryPreferences(nextPreferences) {
   deliveryPreferences = { ...deliveryPreferences, ...nextPreferences };
   if (!DELIVERY_LOCATIONS[deliveryPreferences.location]) deliveryPreferences.location = "hcm";
   if (!["room", "placement"].includes(deliveryPreferences.method)) deliveryPreferences.method = "room";
-  localStorage.setItem("luxroom-delivery-preferences", JSON.stringify(deliveryPreferences));
+  store.set(STORE_KEYS.delivery, deliveryPreferences);
   window.LuxRoom.deliveryPreferences = deliveryPreferences;
   document.dispatchEvent(new CustomEvent("luxroom-delivery-updated", { detail: deliveryPreferences }));
 }
@@ -442,20 +856,26 @@ function showToast(message) {
   }, 3000);
 }
 
-function addToCart(productId, quantity = 1, variantId = null) {
+function addToCart(productId, quantity = 1, variantId = null, sizeId = "std") {
   const product = getProduct(productId);
   if (!product) return null;
   const variant = getVariant(product, variantId);
-  const key = makeCartKey(product.id, variant.variantId);
+  const size = getSize(product, sizeId);
+  const key = makeCartKey(product.id, variant.variantId, size.sizeId);
+  const maxQuantity = getMaxQuantity(product, variant);
   const existingItem = cartItems.find((item) => item.key === key);
   if (existingItem) {
-    existingItem.quantity += quantity;
+    const wanted = existingItem.quantity + quantity;
+    existingItem.quantity = Math.min(maxQuantity, wanted);
+    if (wanted > maxQuantity) showToast(`Only ${maxQuantity} of ${product.name} in ${variant.finish} available. Your cart holds the maximum.`);
   } else {
+    if (quantity > maxQuantity) showToast(`Only ${maxQuantity} of ${product.name} in ${variant.finish} available. Quantity adjusted.`);
     cartItems.push(normalizeCartItem({
       productId: product.id,
       variantId: variant.variantId,
-      price: variant.price,
-      quantity,
+      sizeId: size.sizeId,
+      price: variant.price + size.priceDelta,
+      quantity: Math.min(maxQuantity, quantity),
     }));
   }
   persistCart();
@@ -471,6 +891,11 @@ function updateCartItem(itemKey, quantity) {
     ? String(itemKey)
     : cartItems.find((item) => item.productId === Number(itemKey))?.key;
   if (!resolvedKey) return;
+  const current = cartItems.find((item) => item.key === resolvedKey);
+  if (current && quantity > current.maxQuantity) {
+    showToast(`Only ${current.maxQuantity} of ${current.name} in ${current.finish} available.`);
+    quantity = current.maxQuantity;
+  }
   cartItems = quantity <= 0
     ? cartItems.filter((item) => item.key !== resolvedKey)
     : cartItems.map((item) => item.key === resolvedKey ? { ...item, quantity } : item);
@@ -481,7 +906,8 @@ function updateCartItem(itemKey, quantity) {
 
 function clearCart() {
   cartItems = [];
-  localStorage.removeItem("luxroom-cart-items");
+  store.set(STORE_KEYS.cart, []);
+  store.remove(STORE_KEYS.promo);
   window.LuxRoom.cartItems = cartItems;
   syncCartCount();
   document.dispatchEvent(new Event("luxroom-cart-updated"));
@@ -516,9 +942,9 @@ function initMiniCartPreview() {
       popover.innerHTML = '<p class="mini-cart-eyebrow">Your selection</p><p class="mini-cart-empty">No objects here yet. Take your time.</p><a class="mini-cart-link" href="products.html">Explore the collection <span aria-hidden="true">↗</span></a>';
       return;
     }
-    popover.innerHTML = `<p class="mini-cart-eyebrow">Your selection · ${getCartItemCount()} ${getCartItemCount() === 1 ? "object" : "objects"}</p><div class="mini-cart-items">${items.map((item) => {
+    popover.innerHTML = `<p class="mini-cart-eyebrow">Your selection / ${getCartItemCount()} ${getCartItemCount() === 1 ? "object" : "objects"}</p><div class="mini-cart-items">${items.map((item) => {
       const product = productById.get(item.productId);
-      return `<div class="mini-cart-item"><span class="mini-cart-item-image" style="background-image:url('${item.image || product?.image || "img/luxroom_visual_reference.webp"}')" aria-hidden="true"></span><span class="mini-cart-item-copy"><strong>${item.name}</strong><small>${item.finish} · ${item.quantity} × ${formatMoney(item.price)}</small></span></div>`;
+      return `<div class="mini-cart-item"><span class="mini-cart-item-image" style="background-image:url('${item.image || product?.image || "img/luxroom_visual_reference.webp"}')" aria-hidden="true"></span><span class="mini-cart-item-copy"><strong>${item.name}</strong><small>${item.finish}, ${item.quantity} × ${formatMoney(item.price)}</small></span></div>`;
     }).join("")}</div><div class="mini-cart-total"><span>Subtotal</span><strong>$${total.toFixed(0)}</strong></div><a class="mini-cart-link" href="cart.html">View cart <span aria-hidden="true">↗</span></a>`;
   };
 
@@ -567,7 +993,7 @@ function toggleWishlist(productId) {
     wishlistItems.push(productId);
     if (product) showToast(`${product.name} saved to wishlist.`);
   }
-  localStorage.setItem("luxroom-wishlist", JSON.stringify(wishlistItems));
+  store.set(STORE_KEYS.wishlist, wishlistItems);
   window.LuxRoom.wishlistItems = wishlistItems;
   syncWishlistBadge();
   document.dispatchEvent(new CustomEvent("wishlist-updated"));
@@ -612,7 +1038,7 @@ function upgradeFooter() {
     event.preventDefault();
     const input = footer.querySelector("#footer-email");
     if (!input?.checkValidity()) { input?.reportValidity(); return; }
-    showToast("Thank you — LuxRoom notes will arrive quietly.");
+    showToast("Thank you. This demo does not store or email your address.");
     event.currentTarget.reset();
   });
 }
@@ -646,26 +1072,310 @@ function initContactContext() {
   }
 }
 
-function initProfileOrders() {
-  if (!document.body.classList.contains("profile-page")) return;
-  let orders = [];
-  try { orders = JSON.parse(localStorage.getItem("luxroom-orders") || "[]"); } catch { orders = []; }
-  const order = orders[0];
-  const list = document.querySelector(".order-list");
-  if (!order || !list || list.querySelector(`[data-order-id="${order.id}"]`)) return;
-  const date = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(order.createdAt));
-  const card = document.createElement("article");
-  card.className = "order-card";
-  card.dataset.orderId = order.id;
-  card.innerHTML = `<header class="order-header"><div><span class="order-date">${date} / ${order.id}</span><h3>${order.items.length === 1 ? order.items[0].name : `${order.items.length} objects for the room`}</h3></div><span class="order-status status-processing">${order.status}</span></header><div class="order-items">${order.items.map((item) => `<div class="item-summary"><span>${item.name} · ${item.finish} / ${String(item.quantity).padStart(2, "0")}</span><span>${formatMoney(item.price * item.quantity)}</span></div>`).join("")}</div><footer class="order-footer"><a class="view-detail-link" href="tracking.html?order=${encodeURIComponent(order.id)}">Track order ↗</a><strong>Total ${formatMoney(order.totals.total)}</strong></footer>`;
-  list.prepend(card);
+/* Orders: demo records only. No payment is taken and nothing is shipped. */
+const ORDER_STEPS = ["Confirmed", "Preparing", "Quality check", "Delivery scheduled", "Out for delivery", "Delivered"];
+
+function hydrateOrder(raw) {
+  if (!raw) return null;
+  const items = (raw.items || []).map((item) => normalizeCartItem(item)).filter(Boolean);
+  const madeToOrder = items.some((item) => item.stockStatus === "Made to order");
+  const steps = ORDER_STEPS.map((status) => status === "Preparing" && madeToOrder ? "In production" : status);
+  const step = Math.max(0, Math.min(steps.length - 1, Number(raw.timelineStep) || 0));
+  const subtotal = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+  const location = Object.values(DELIVERY_LOCATIONS).find((entry) => entry.label === raw.address?.province) || DELIVERY_LOCATIONS.hcm;
+  const placement = raw.delivery?.method === "placement" ? 45 : 0;
+  const totals = raw.totals || (() => {
+    const promo = raw.promo ? getPromoCatalogue()[raw.promo] : null;
+    const discount = promoDiscount(promo, subtotal);
+    const shipping = location.surcharge + placement;
+    return { subtotal, discount, shipping, total: subtotal - discount + shipping };
+  })();
+  const created = new Date(raw.createdAt || Date.now());
+  const slowest = items.reduce((max, item) => ({ leadTimeMin: Math.max(max.leadTimeMin, item.leadTimeMin), leadTimeMax: Math.max(max.leadTimeMax, item.leadTimeMax) }), { leadTimeMin: 0, leadTimeMax: 0 });
+  const start = new Date(created); start.setDate(start.getDate() + slowest.leadTimeMin + location.extraDays);
+  const end = new Date(created); end.setDate(end.getDate() + slowest.leadTimeMax + location.extraDays);
+  const closed = ["Cancelled", "Return requested", "Cancellation requested"].includes(raw.status);
+  const returnable = items.every((item) => getProduct(item.productId)?.returnable !== false);
+  const deliveredAt = raw.delivery?.deliveredAt ? new Date(raw.delivery.deliveredAt) : null;
+  const withinReturnWindow = !deliveredAt || (Date.now() - deliveredAt.getTime()) <= 14 * 86400000;
+  return {
+    ...raw,
+    items,
+    totals,
+    status: raw.status || steps[step],
+    delivery: { ...raw.delivery, arrival: raw.delivery?.arrival || `${formatArrivalDate(start)} — ${formatArrivalDate(end)}` },
+    timeline: steps.map((status, index) => ({ status, complete: !closed && index <= step, current: !closed && index === step })),
+    canCancel: !closed && step < 3,
+    canReturn: !closed && raw.status === "Delivered" && returnable && withinReturnWindow,
+    returnBlockedReason: raw.status === "Delivered" && !closed && (!returnable ? "Made-to-order pieces cannot be returned." : (!withinReturnWindow ? "The 14-day return window has closed." : "")),
+  };
 }
 
-newsletterForms.forEach((form) => form.addEventListener("submit", (event) => event.preventDefault()));
+function readOrders() {
+  return store.get(STORE_KEYS.orders, []);
+}
+
+function listOrders() {
+  const user = getCurrentUser();
+  return readOrders()
+    .filter((order) => (user ? order.userId === user.id : !order.userId))
+    .map(hydrateOrder)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function findOrder(orderId, email = null) {
+  const id = String(orderId || "").trim().toUpperCase();
+  if (!id) return null;
+  const raw = readOrders().find((order) => order.id.toUpperCase() === id);
+  if (!raw) return null;
+  if (email !== null && String(raw.contact?.email || "").toLowerCase() !== String(email).trim().toLowerCase()) return null;
+  return hydrateOrder(raw);
+}
+
+function saveOrderRecord(order) {
+  const orders = readOrders().filter((entry) => entry.id !== order.id);
+  store.set(STORE_KEYS.orders, [order, ...orders].slice(0, 20));
+  store.set(STORE_KEYS.lastOrder, order);
+  return order;
+}
+
+function updateOrderStatus(orderId, changes) {
+  const orders = readOrders();
+  const index = orders.findIndex((order) => order.id === orderId);
+  if (index < 0) throw new Error("We could not find that order in this demo.");
+  orders[index] = { ...orders[index], ...changes, history: [...(orders[index].history || []), { at: new Date().toISOString(), ...changes }] };
+  store.set(STORE_KEYS.orders, orders);
+  document.dispatchEvent(new CustomEvent("luxroom-orders-updated", { detail: { orderId } }));
+  return hydrateOrder(orders[index]);
+}
+
+function requestOrderCancellation(orderId, reason = "") {
+  const order = findOrder(orderId);
+  if (!order) throw new Error("We could not find that order in this demo.");
+  if (!order.canCancel) throw new Error("This order is already scheduled for delivery and can no longer be cancelled online. Contact the room team instead.");
+  return updateOrderStatus(order.id, { status: "Cancelled", requestReason: reason || "Changed my mind" });
+}
+
+function requestOrderReturn(orderId, reason = "") {
+  const order = findOrder(orderId);
+  if (!order) throw new Error("We could not find that order in this demo.");
+  if (!order.canReturn) throw new Error(order.returnBlockedReason || "This order cannot be returned online.");
+  return updateOrderStatus(order.id, { status: "Return requested", requestReason: reason || "Not right for the room" });
+}
+
+/* Reviews: seeded per product, visitor reviews stay in this tab. */
+function getReviews(productId) {
+  const all = store.get(STORE_KEYS.reviews, {});
+  return (all[String(productId)] || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+function addReview(productId, review) {
+  const rating = Number(review.rating);
+  if (!(rating >= 1 && rating <= 5)) throw new Error("Choose a rating from 1 to 5.");
+  if (!String(review.name || "").trim()) throw new Error("Add the name to show with your review.");
+  if (String(review.body || "").trim().length < 10) throw new Error("Write at least a sentence (10 characters) about the piece.");
+  const all = store.get(STORE_KEYS.reviews, {});
+  const key = String(productId);
+  const entry = {
+    id: `r-${key}-${Date.now().toString(36)}`,
+    name: String(review.name).trim(),
+    rating,
+    title: String(review.title || "").trim(),
+    body: String(review.body).trim(),
+    date: new Date().toISOString().slice(0, 10),
+    local: true,
+  };
+  all[key] = [entry, ...(all[key] || [])];
+  store.set(STORE_KEYS.reviews, all);
+  return entry;
+}
+
+/* Shared cancel / return request controls used by tracking and order history. */
+function orderRequestMarkup(order) {
+  if (!order) return "";
+  if (order.status === "Cancelled") return `<p class="order-request-state">Cancelled at your request${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. Nothing was charged.</p>`;
+  if (order.status === "Return requested") return `<p class="order-request-state">Return requested${order.requestReason ? `: ${escapeMarkup(order.requestReason)}` : ""}. The room team would contact you to arrange collection.</p>`;
+  const kind = order.canCancel ? "cancel" : (order.canReturn ? "return" : null);
+  if (!kind) {
+    const reason = order.returnBlockedReason || "This order is already scheduled for delivery, so changes go through the room team.";
+    return `<p class="order-request-state">${escapeMarkup(reason)} <a href="contact.html?topic=delivery">Contact us</a></p>`;
+  }
+  const reasons = kind === "cancel"
+    ? ["Changed my mind", "Found a better fit", "Delivery timing does not work", "Ordered by mistake"]
+    : ["Not right for the room", "Arrived damaged", "Finish differs from expectations", "Too large for the space"];
+  const formId = `order-request-${escapeMarkup(order.id)}`;
+  return `
+    <div class="order-request" data-order-request="${escapeMarkup(order.id)}" data-request-kind="${kind}">
+      <button type="button" class="order-request__open" data-order-request-open aria-expanded="false" aria-controls="${formId}">${kind === "cancel" ? "Cancel order" : "Request a return"}</button>
+      <form class="order-request__form" id="${formId}" hidden>
+        <label for="${formId}-reason">${kind === "cancel" ? "Why are you cancelling?" : "Why are you returning it?"}</label>
+        <select id="${formId}-reason" name="reason">${reasons.map((reason) => `<option>${reason}</option>`).join("")}</select>
+        <div class="order-request__actions">
+          <button type="submit" class="order-request__confirm">${kind === "cancel" ? "Confirm cancellation" : "Send return request"}</button>
+          <button type="button" class="order-request__dismiss" data-order-request-dismiss>${kind === "cancel" ? "Keep order" : "Never mind"}</button>
+        </div>
+        <p class="order-request__status" role="status" aria-live="polite"></p>
+      </form>
+    </div>`;
+}
+
+function bindOrderRequests(root, onUpdated) {
+  if (!root || root.dataset.orderRequestsBound === "true") return;
+  root.dataset.orderRequestsBound = "true";
+  root.addEventListener("click", (event) => {
+    const open = event.target.closest("[data-order-request-open]");
+    const dismiss = event.target.closest("[data-order-request-dismiss]");
+    if (!open && !dismiss) return;
+    const container = event.target.closest("[data-order-request]");
+    const form = container?.querySelector("form");
+    const opener = container?.querySelector("[data-order-request-open]");
+    if (!form || !opener) return;
+    const show = Boolean(open);
+    form.hidden = !show;
+    opener.hidden = show;
+    opener.setAttribute("aria-expanded", String(show));
+    if (show) form.querySelector("select")?.focus();
+    else opener.focus();
+  });
+  root.addEventListener("submit", async (event) => {
+    const form = event.target.closest(".order-request__form");
+    if (!form) return;
+    event.preventDefault();
+    const container = form.closest("[data-order-request]");
+    const orderId = container.dataset.orderRequest;
+    const kind = container.dataset.requestKind;
+    const status = form.querySelector(".order-request__status");
+    const confirm = form.querySelector(".order-request__confirm");
+    const reason = form.querySelector("select")?.value || "";
+    confirm.disabled = true;
+    confirm.setAttribute("aria-busy", "true");
+    status.dataset.state = "loading";
+    status.textContent = kind === "cancel" ? "Sending the cancellation…" : "Sending the return request…";
+    try {
+      const updated = await simulateRequest(() => (kind === "cancel" ? requestOrderCancellation(orderId, reason) : requestOrderReturn(orderId, reason)), { label: kind === "cancel" ? "The cancellation" : "The return request" });
+      showToast(kind === "cancel" ? `Order ${orderId} cancelled.` : `Return requested for ${orderId}.`);
+      onUpdated?.(updated);
+    } catch (error) {
+      status.dataset.state = "error";
+      status.textContent = error.message;
+      confirm.disabled = false;
+      confirm.removeAttribute("aria-busy");
+      confirm.textContent = "Try again";
+    }
+  });
+}
+
+function escapeMarkup(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+/* Footer demo controls + global affordances shared by every page. */
+function initDemoControls() {
+  const footer = document.querySelector("footer.footer, footer.home-footer, footer.detail-footer, footer.footer-rich, body > footer");
+  if (!footer || footer.querySelector(".footer-demo")) return;
+  const panel = document.createElement("div");
+  panel.className = "footer-demo";
+  panel.setAttribute("role", "group");
+  panel.setAttribute("aria-label", "Demo store controls");
+  panel.innerHTML = `
+    <p class="footer-demo__note"><strong>Demo store.</strong> Orders, payments and accounts are simulated and kept only in this browser tab.</p>
+    <div class="footer-demo__actions">
+      <button type="button" class="footer-demo__button" data-demo-fail aria-pressed="false">Fail the next request</button>
+      <button type="button" class="footer-demo__button" data-demo-reset>Reset demo data</button>
+    </div>`;
+  footer.appendChild(panel);
+  const failButton = panel.querySelector("[data-demo-fail]");
+  const syncFail = () => {
+    const armed = isFailureArmed();
+    failButton.setAttribute("aria-pressed", String(armed));
+    failButton.textContent = armed ? "Next request will fail" : "Fail the next request";
+  };
+  failButton.addEventListener("click", () => {
+    setFailureArmed(!isFailureArmed());
+    showToast(isFailureArmed() ? "The next request will fail so you can test recovery." : "Simulated failure switched off.");
+  });
+  panel.querySelector("[data-demo-reset]").addEventListener("click", resetDemoData);
+  document.addEventListener("luxroom-demo-updated", syncFail);
+  syncFail();
+}
+
+function ensureSearchOverlay() {
+  if (document.getElementById("global-search-overlay") || !document.querySelector('.topbar-actions [aria-label="Search"]')) return;
+  const overlay = document.createElement("div");
+  overlay.className = "search-overlay";
+  overlay.id = "global-search-overlay";
+  overlay.innerHTML = '<div class="search-modal" role="dialog" aria-modal="true" aria-label="Search LuxRoom"><div class="search-input-wrapper"><label class="sr-only" for="global-search-input">Search the collection</label><input id="global-search-input" type="search" placeholder="Search the collection" /><button id="close-search" class="icon-button" type="button" aria-label="Close search"><span aria-hidden="true">×</span></button></div></div>';
+  document.body.appendChild(overlay);
+}
+
+function syncAccountLinks() {
+  const user = getCurrentUser();
+  document.querySelectorAll('.topbar-actions a[aria-label="Account"], a[data-account-link]').forEach((link) => {
+    link.href = user ? "profile.html" : "auth.html";
+    link.dataset.accountLink = "true";
+    link.title = user ? `Signed in as ${user.name}` : "Sign in";
+    link.classList.toggle("is-signed-in", Boolean(user));
+  });
+}
+
+function showFlashMessage() {
+  const message = consumeFlashMessage();
+  if (message) window.setTimeout(() => showToast(message), 120);
+}
+
+newsletterForms.forEach((form) => {
+  // Previously the submit was swallowed with no feedback. Now it validates, shows progress
+  // and confirms (simulated: no email is stored or sent).
+  form.setAttribute("novalidate", "");
+  let status = form.parentElement?.querySelector(".newsletter-status");
+  if (!status) {
+    status = document.createElement("p");
+    status.className = "form-status newsletter-status";
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    form.after(status);
+  }
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const input = form.querySelector('input[type="email"]');
+    const button = form.querySelector('button[type="submit"], button:not([type])');
+    if (!input?.value.trim() || !input.checkValidity()) {
+      input?.setAttribute("aria-invalid", "true");
+      status.dataset.state = "error";
+      status.textContent = "Enter an email like name@example.com to join the list.";
+      input?.focus();
+      return;
+    }
+    input.removeAttribute("aria-invalid");
+    if (button) { button.disabled = true; button.setAttribute("aria-busy", "true"); }
+    status.dataset.state = "loading";
+    status.textContent = "Adding you to the list…";
+    try {
+      await simulateRequest(() => true, { label: "Joining the list" });
+      status.dataset.state = "success";
+      status.textContent = "You are on the list. This demo does not store or email your address.";
+      form.reset();
+    } catch (error) {
+      status.dataset.state = "error";
+      status.textContent = error.message;
+    } finally {
+      if (button) { button.disabled = false; button.removeAttribute("aria-busy"); }
+    }
+  });
+});
 upgradeFooter();
 normalizeCartContinueAction();
 initContactContext();
-initProfileOrders();
+initDemoControls();
+ensureSearchOverlay();
+syncAccountLinks();
+document.addEventListener("luxroom-account-updated", syncAccountLinks);
 
 function initMotionSystem() {
   const selectors = [
@@ -768,14 +1478,54 @@ window.LuxRoom = {
   getCartTotals,
   updateDeliveryPreferences,
   formatMoney,
+  formatArrivalDate,
+  escapeHtml: escapeMarkup,
+  store,
+  storeKeys: STORE_KEYS,
+  request: simulateRequest,
+  isFailureArmed,
+  setFailureArmed,
+  resetDemoData,
+  setFlashMessage,
+  getSize,
+  getMaxQuantity,
+  savedForLater,
+  moveToSavedForLater,
+  moveSavedToCart,
+  removeSavedForLater,
+  applyPromoCode,
+  removePromoCode,
+  getAppliedPromo,
+  validatePromoCode,
+  getCurrentUser: () => publicUser(getCurrentUser()),
+  signIn,
+  signUp,
+  signOut,
+  requestPasswordReset,
+  updateProfile,
+  listAddresses,
+  saveAddress,
+  deleteAddress,
+  setDefaultAddress,
+  listOrders,
+  findOrder,
+  hydrateOrder,
+  saveOrderRecord,
+  requestOrderCancellation,
+  requestOrderReturn,
+  getReviews,
+  addReview,
+  orderRequestMarkup,
+  bindOrderRequests,
 };
 window.toggleWishlist = toggleWishlist;
+showFlashMessage();
 persistCart();
 syncCartCount();
 syncWishlistBadge();
 injectContextualBackLink();
 
-const searchButtons = document.querySelectorAll('button[aria-label="Search"], .icon-button[aria-label="Search"]');
+const searchButtons = document.querySelectorAll('button[aria-label="Search"], .icon-button[aria-label="Search"], .collection-search-trigger');
 const searchOverlay = document.getElementById("global-search-overlay");
 const closeSearch = document.getElementById("close-search");
 if (searchOverlay) {

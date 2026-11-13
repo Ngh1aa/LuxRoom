@@ -1,10 +1,28 @@
 const detailParams = new URLSearchParams(window.location.search);
 const productQuery = detailParams.get("product");
 const variantQuery = detailParams.get("variant");
+const sizeQuery = detailParams.get("size");
+const productMissing = productQuery !== null && !window.LuxRoom.getProduct(Number(productQuery));
 const selectedProduct = window.LuxRoom.getProduct(Number(productQuery)) || window.LuxRoom.products[0];
 let selectedVariant = window.LuxRoom.getVariant(selectedProduct, variantQuery);
+let selectedSize = window.LuxRoom.getSize(selectedProduct, sizeQuery);
 let selectedGallery = selectedVariant.images.slice(0, 3);
 let selectedQuantity = 1;
+
+function renderNotFound() {
+  const main = document.querySelector("main.product-detail-shell");
+  document.title = "LuxRoom | Piece not found";
+  if (!main) return;
+  const suggestions = window.LuxRoom.products.slice(0, 3);
+  main.innerHTML = `
+    <section class="detail-not-found" aria-labelledby="not-found-title">
+      <p class="eyebrow">Piece not found</p>
+      <h1 id="not-found-title">This piece is not<br><em>in the collection.</em></h1>
+      <p>We could not find a product with the reference <strong>${window.LuxRoom.escapeHtml(productQuery)}</strong>. It may have been retired, or the link may be incomplete.</p>
+      <div class="detail-not-found__actions"><a class="primary-button" href="products.html">Browse the collection <span aria-hidden="true">↗</span></a><a class="secondary-button" href="contact.html?topic=product">Ask the studio</a></div>
+      <div class="detail-not-found__suggestions">${suggestions.map((product) => `<a href="detail.html?product=${product.id}"><span style="background-image:url('${product.image}')" role="img" aria-label="${window.LuxRoom.escapeHtml(product.name)}"></span><strong>${window.LuxRoom.escapeHtml(product.name)}</strong><small>${window.LuxRoom.formatMoney(product.price)}</small></a>`).join("")}</div>
+    </section>`;
+}
 
 const nodes = {
   title: document.querySelector("#detail-title"),
@@ -42,12 +60,62 @@ function syncVariantUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("product", String(selectedProduct.id));
   url.searchParams.set("variant", selectedVariant.variantId);
+  if (selectedSize && selectedSize.sizeId !== "std") url.searchParams.set("size", selectedSize.sizeId);
+  else url.searchParams.delete("size");
   window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 function dimensionSummary(product) {
-  const { width, depth, height } = product.dimensions;
+  const { height } = product.dimensions;
+  const width = selectedSize?.width ?? product.dimensions.width;
+  const depth = selectedSize?.depth ?? product.dimensions.depth;
   return `W ${width} × D ${depth} × H ${height} cm`;
+}
+
+function currentPrice() {
+  return selectedVariant.price + (selectedSize?.priceDelta || 0);
+}
+
+function maxQuantity() {
+  return window.LuxRoom.getMaxQuantity(selectedProduct, selectedVariant);
+}
+
+function stockMessage() {
+  if (selectedVariant.stockStatus === "In stock") {
+    return selectedVariant.stock <= 3
+      ? `Only ${selectedVariant.stock} left in ${selectedVariant.finish}. Order soon.`
+      : `${selectedVariant.stock} in stock in ${selectedVariant.finish}.`;
+  }
+  if (selectedVariant.stockStatus === "Made to order") return `Made to order in ${selectedVariant.finish}. Made for you in ${selectedVariant.leadTimeMin}–${selectedVariant.leadTimeMax} days, up to 10 per order.`;
+  return `Pre-order in ${selectedVariant.finish}. The next batch ships in ${selectedVariant.leadTimeMin}–${selectedVariant.leadTimeMax} days.`;
+}
+
+function renderSizes() {
+  const container = document.querySelector("#size-options");
+  if (!container) return;
+  const sizes = selectedProduct.sizes;
+  container.innerHTML = sizes.length > 1
+    ? sizes.map((size) => {
+      const active = size.sizeId === selectedSize.sizeId;
+      const delta = size.priceDelta ? ` (${size.priceDelta > 0 ? "+" : "−"}${window.LuxRoom.formatMoney(Math.abs(size.priceDelta))})` : "";
+      return `<button type="button" class="size-option${active ? " active" : ""}" data-size-id="${size.sizeId}" aria-pressed="${active}"><strong>${size.label}</strong><small>W ${size.width} cm${delta}</small></button>`;
+    }).join("")
+    : `<p class="size-single">One size, W ${sizes[0].width} cm</p>`;
+}
+
+function syncQuantity() {
+  const max = maxQuantity();
+  if (selectedQuantity > max) selectedQuantity = max;
+  if (nodes.quantity) nodes.quantity.textContent = String(selectedQuantity);
+  const plus = document.querySelector("#qty-plus");
+  if (plus) plus.setAttribute("aria-disabled", String(selectedQuantity >= max));
+  const minus = document.querySelector("#qty-minus");
+  if (minus) minus.setAttribute("aria-disabled", String(selectedQuantity <= 1));
+  const note = document.querySelector("#detail-stock-note");
+  if (note) {
+    note.textContent = stockMessage();
+    note.dataset.level = selectedVariant.stockStatus === "In stock" && selectedVariant.stock <= 3 ? "low" : "";
+  }
 }
 
 function dimensionDetails(product) {
@@ -81,6 +149,7 @@ function updateGallery() {
     button.style.backgroundImage = `url('./${image}')`;
     button.setAttribute("aria-label", `View ${selectedProduct.name} in ${selectedVariant.finish}, image ${index + 1}`);
     button.classList.toggle("is-selected", index === 0);
+    button.setAttribute("aria-pressed", String(index === 0));
   });
   if (nodes.specImage) {
     const nextUrl = `./${selectedGallery[0] || selectedProduct.image}`;
@@ -111,7 +180,7 @@ function updateDelivery() {
 }
 
 function updateVariantDetails() {
-  const price = window.LuxRoom.formatMoney(selectedVariant.price);
+  const price = window.LuxRoom.formatMoney(currentPrice());
   if (nodes.price) {
     nodes.price.textContent = price;
     window.LuxRoomMotion?.flashPrice(nodes.price);
@@ -123,7 +192,11 @@ function updateVariantDetails() {
   if (nodes.mobileFinish) nodes.mobileFinish.textContent = selectedVariant.finish;
   if (nodes.materialSummary) nodes.materialSummary.textContent = `${selectedVariant.material} / ${Object.values(selectedProduct.materialDetails)[1] || selectedProduct.materialGroup}`;
   if (nodes.stockSummary) nodes.stockSummary.textContent = selectedVariant.stockStatus;
-  if (nodes.availability) nodes.availability.textContent = `${selectedVariant.stockStatus} · ${leadTimeLabel(selectedVariant)} · ${selectedVariant.sku}`;
+  if (nodes.availability) nodes.availability.textContent = `${selectedVariant.stockStatus}, ${leadTimeLabel(selectedVariant).toLowerCase()} / SKU ${selectedVariant.sku}`;
+  if (nodes.dimensionSummary) nodes.dimensionSummary.textContent = dimensionSummary(selectedProduct);
+  if (nodes.dimensionWidth) nodes.dimensionWidth.textContent = `${selectedSize.width} cm`;
+  renderSizes();
+  syncQuantity();
   nodes.finishOptions?.querySelectorAll(".finish-option").forEach((button) => {
     const isActive = button.dataset.variantId === selectedVariant.variantId;
     button.classList.toggle("active", isActive);
@@ -142,7 +215,7 @@ function renderProductInformation() {
   if (nodes.description) nodes.description.textContent = selectedProduct.description;
   if (nodes.dimensionSummary) nodes.dimensionSummary.textContent = dimensionSummary(selectedProduct);
   if (nodes.dimensionCopy) nodes.dimensionCopy.textContent = dimensionDetails(selectedProduct);
-  if (nodes.dimensionWidth) nodes.dimensionWidth.textContent = `${selectedProduct.dimensions.width} cm`;
+  if (nodes.dimensionWidth) nodes.dimensionWidth.textContent = `${selectedSize.width} cm`;
   if (nodes.dimensionHeight) nodes.dimensionHeight.textContent = `${selectedProduct.dimensions.height} cm`;
   if (nodes.dimensionDepth) nodes.dimensionDepth.textContent = `${selectedProduct.dimensions.depth} cm deep`;
   if (nodes.dimensionVisual) {
@@ -164,7 +237,10 @@ function renderProductInformation() {
 function setupGallery() {
   galleryButtons.forEach((button, index) => {
     button.addEventListener("click", () => {
-      galleryButtons.forEach((item, itemIndex) => item.classList.toggle("is-selected", itemIndex === index));
+      galleryButtons.forEach((item, itemIndex) => {
+        item.classList.toggle("is-selected", itemIndex === index);
+        item.setAttribute("aria-pressed", String(itemIndex === index));
+      });
       if (nodes.specImage) nodes.specImage.style.backgroundImage = `url('./${selectedGallery[index] || selectedGallery[0]}')`;
     });
   });
@@ -188,14 +264,28 @@ function setupFinishes() {
   });
 }
 
+function setupSizes() {
+  document.querySelector("#size-options")?.addEventListener("click", (event) => {
+    const button = event.target.closest(".size-option[data-size-id]");
+    if (!button) return;
+    selectedSize = window.LuxRoom.getSize(selectedProduct, button.dataset.sizeId);
+    renderProductInformation();
+    updateVariantDetails();
+  });
+}
+
 function setupQuantityControls() {
   document.querySelector("#qty-minus")?.addEventListener("click", () => {
     selectedQuantity = Math.max(1, selectedQuantity - 1);
-    if (nodes.quantity) nodes.quantity.textContent = String(selectedQuantity);
+    syncQuantity();
   });
   document.querySelector("#qty-plus")?.addEventListener("click", () => {
+    if (selectedQuantity >= maxQuantity()) {
+      window.LuxRoom.showToast(`Only ${maxQuantity()} available in ${selectedVariant.finish}.`);
+      return;
+    }
     selectedQuantity += 1;
-    if (nodes.quantity) nodes.quantity.textContent = String(selectedQuantity);
+    syncQuantity();
   });
 }
 
@@ -211,8 +301,8 @@ function setupAccordions() {
 }
 
 function addSelectedToCart() {
-  window.LuxRoom.addToCart(selectedProduct.id, selectedQuantity, selectedVariant.variantId);
-  window.LuxRoom.showToast(`${selectedProduct.name} in ${selectedVariant.finish} added to your selection.`);
+  window.LuxRoom.addToCart(selectedProduct.id, selectedQuantity, selectedVariant.variantId, selectedSize.sizeId);
+  window.LuxRoom.showToast(`${selectedProduct.name} in ${selectedVariant.finish}${selectedSize.label !== "One size" ? `, ${selectedSize.label}` : ""} added to your selection.`);
   window.LuxRoomMotion?.pulseCartBadge();
   if (nodes.addedConfirmation) nodes.addedConfirmation.hidden = false;
 }
@@ -239,11 +329,7 @@ function setupDelivery() {
 }
 
 function readRecentlyViewed() {
-  try {
-    return JSON.parse(localStorage.getItem("luxroom-recently-viewed") || "[]").map(Number);
-  } catch {
-    return [];
-  }
+  return (window.LuxRoom.store.get(window.LuxRoom.storeKeys.recentlyViewed, []) || []).map(Number);
 }
 
 function updateRecentlyViewed() {
@@ -255,19 +341,97 @@ function updateRecentlyViewed() {
     grid.innerHTML = recentProducts.map((product) => `
       <a class="recently-viewed-item" href="detail.html?product=${product.id}">
         <span class="recently-viewed-image" style="background-image:url('${product.image}')" role="img" aria-label="${product.name}"></span>
-        <strong>${product.name}</strong><small>${window.LuxRoom.formatMoney(product.price)} · ${product.dimensions.width} × ${product.dimensions.depth} cm</small>
+        <strong>${product.name}</strong><small>${window.LuxRoom.formatMoney(product.price)}, ${product.dimensions.width} × ${product.dimensions.depth} cm</small>
       </a>`).join("");
     section.hidden = false;
   }
-  localStorage.setItem("luxroom-recently-viewed", JSON.stringify([selectedProduct.id, ...previous].slice(0, 8)));
+  window.LuxRoom.store.set(window.LuxRoom.storeKeys.recentlyViewed, [selectedProduct.id, ...previous].slice(0, 8));
 }
 
-setupFinishes();
-setupGallery();
-setupQuantityControls();
-setupAccordions();
-setupPurchaseControls();
-setupDelivery();
-renderProductInformation();
-updateVariantDetails();
-updateRecentlyViewed();
+function stars(rating) {
+  return `<span class="review-meter" style="--rating:${Number(rating).toFixed(1)}" aria-hidden="true"></span>`;
+}
+
+function renderReviews() {
+  const summary = document.querySelector("#reviews-summary");
+  const list = document.querySelector("#reviews-list");
+  if (!summary || !list) return;
+  const reviews = window.LuxRoom.getReviews(selectedProduct.id);
+  if (!reviews.length) {
+    summary.innerHTML = `<p><strong>No reviews yet.</strong> Be the first to share how ${window.LuxRoom.escapeHtml(selectedProduct.name)} lives in a room.</p>`;
+    list.innerHTML = "";
+    return;
+  }
+  const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+  summary.innerHTML = `<p class="reviews-average">${stars(average)}<strong>${average.toFixed(1)} out of 5</strong><span>${reviews.length} ${reviews.length === 1 ? "review" : "reviews"}</span></p>`;
+  list.innerHTML = reviews.map((review) => `
+    <article class="review-item">
+      <header>${stars(review.rating)}<span class="sr-only">${review.rating} out of 5</span><strong>${window.LuxRoom.escapeHtml(review.title || "Review")}</strong></header>
+      <p>${window.LuxRoom.escapeHtml(review.body)}</p>
+      <footer>${window.LuxRoom.escapeHtml(review.name)}, ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(review.date))}${review.local ? " (your review, this tab only)" : ""}</footer>
+    </article>`).join("");
+}
+
+function setupReviews() {
+  const form = document.querySelector("#review-form");
+  const toggle = document.querySelector("#review-open");
+  const status = document.querySelector("#review-status");
+  if (!form) return;
+  const setReviewStatus = (message, state) => {
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = state;
+  };
+  toggle?.addEventListener("click", () => {
+    form.hidden = false;
+    toggle.hidden = true;
+    toggle.setAttribute("aria-expanded", "true");
+    form.querySelector("input[name='rating']")?.focus();
+  });
+  form.querySelector("#review-cancel")?.addEventListener("click", () => {
+    form.hidden = true;
+    if (toggle) {
+      toggle.hidden = false;
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.focus();
+    }
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    const button = form.querySelector("button[type='submit']");
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    setReviewStatus("Posting your review…", "loading");
+    try {
+      await window.LuxRoom.request(() => window.LuxRoom.addReview(selectedProduct.id, data), { label: "Posting your review" });
+      form.reset();
+      form.hidden = true;
+      if (toggle) toggle.hidden = false;
+      setReviewStatus("Thank you. Your review is posted (kept in this tab only).", "success");
+      renderReviews();
+    } catch (error) {
+      setReviewStatus(error.message, "error");
+    } finally {
+      button.disabled = false;
+      button.removeAttribute("aria-busy");
+    }
+  });
+}
+
+if (productMissing) {
+  renderNotFound();
+} else {
+  setupFinishes();
+  setupSizes();
+  setupGallery();
+  setupQuantityControls();
+  setupAccordions();
+  setupPurchaseControls();
+  setupDelivery();
+  setupReviews();
+  renderProductInformation();
+  updateVariantDetails();
+  renderReviews();
+  updateRecentlyViewed();
+}

@@ -10,6 +10,7 @@
 <link href="css/common.css" rel="stylesheet"/>
 <link href="css/contact.css" rel="stylesheet"/>
 <link href="css/contact-hotfix.css?v=ux-20260813-4" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
 </head>
 <body class="contact-page">
 <header aria-label="Primary navigation" class="topbar">
@@ -22,8 +23,8 @@
 </nav>
 <div class="topbar-actions">
       <button aria-label="Search" class="icon-button" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
-      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" data-cart-count style="display:none">0</span></a>
-      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" data-wishlist-count style="display:none">0</span></a>
+      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span></a>
+      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span></a>
       <a aria-label="Account" class="icon-button" href="auth.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
     </div>
 </header>
@@ -61,37 +62,12 @@
 </main>
 <section class="contact-quiet"><div class="site-shell"><p class="eyebrow">No rush</p><h2>A considered answer<br/>takes a little time.</h2><p>We respond within two working days, and can arrange an appointment when a conversation needs more room.</p></div></section>
 <footer class="site-shell footer"><div><a class="footer-brand" href="index.html"><img alt="" class="luxroom-footer-mark" height="24" src="img/logo/luxroom-mark.svg" width="24"/><span>LuxRoom</span></a><p>Contemporary furniture for considered living.</p></div><div><h3>Explore</h3><p><a href="products.html">Collection</a></p><p><a href="about.html">Our story</a></p></div><div><h3>Visit</h3><p>Ho Chi Minh City</p></div><div><h3>Contact</h3><p><a href="contact.html">Start a conversation</a></p><p id="footer-email">hello@luxroom.com</p></div></footer>
-<div aria-hidden="true" class="search-overlay" id="global-search-overlay"><div aria-label="Search LuxRoom" aria-modal="true" class="search-modal" role="dialog"><div class="search-input-wrapper"><input id="global-search-input" placeholder="Search the collection" type="search"/><button aria-label="Close search" class="icon-button" id="close-search" type="button">×</button></div></div></div>
-<script src="js/common.js?v=ux-20260823-1"></script>
+<div aria-hidden="true" class="search-overlay" id="global-search-overlay"><div aria-label="Search LuxRoom" aria-modal="true" class="search-modal" role="dialog"><div class="search-input-wrapper"><input id="global-search-input" placeholder="Search the collection" type="search"/><button aria-label="Close search" class="icon-button" id="close-search" type="button"><span aria-hidden="true">×</span></button></div></div></div>
+<script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
 <script>
     document.querySelectorAll('.page-back-shell, .contact-image, .contact-visual, .contact-hero-image, .contact-media, .contact-photo, .contact-side-image').forEach((element) => element.remove());
   </script>
-<script>
-const contactForm = document.getElementById('contact-form');
-const contactStatus = document.getElementById('contact-form-status');
-contactForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!contactForm.checkValidity()) {
-    contactForm.reportValidity();
-    contactStatus.textContent = 'Please complete the required fields before sending your note.';
-    contactStatus.dataset.state = 'error';
-    return;
-  }
-  const submitButton = contactForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.setAttribute('aria-busy', 'true');
-  submitButton.firstChild.textContent = 'Sending… ';
-  window.setTimeout(() => {
-    contactForm.reset();
-    contactStatus.textContent = 'Thank you — your note is ready for the LuxRoom team.';
-    contactStatus.dataset.state = 'success';
-    submitButton.disabled = false;
-    submitButton.removeAttribute('aria-busy');
-    submitButton.firstChild.textContent = 'Send your note ';
-    window.LuxRoom?.showToast('Thank you — your note is ready for the LuxRoom team.');
-  }, 450);
-});
-</script>
+<script src="js/contact.js?v=demo-1"></script>
 <script src="js/ui-feedback-init.js?v=0.13.0" type="module"></script>
 </body>
 </html>

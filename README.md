@@ -36,6 +36,25 @@ Phiên bản hiện tại giữ nguyên visual direction luxury/editorial và b�
 - Wishlist được nâng thành Saved Room, có tổng giá trị, chia sẻ và yêu cầu tư vấn.
 - Search thực theo tên, category, room, material, tone, collection và style.
 
+### Full prototype — cửa hàng demo không backend (13/11/2026)
+
+Site hoạt động như một cửa hàng nội thất thật, chỉ thiếu backend:
+
+- **Dữ liệu:** mọi dữ liệu người dùng (giỏ hàng, wishlist, compare, saved rooms, đơn hàng, tài khoản, địa chỉ, review) nằm trong **sessionStorage** của tab, được seed một lần từ `js/store-data.js`. Dữ liệu còn khi chuyển trang/reload, mất khi đóng tab.
+- **Footer demo:** nút **Reset demo data** đưa mọi thứ về seed; nút **Fail the next request** làm request mô phỏng kế tiếp thất bại để kiểm tra trạng thái lỗi và nút thử lại.
+- **Luồng đã hoàn thiện:** lọc/sắp xếp/tìm kiếm/phân trang có loading và lỗi; PDP có finish, size, tồn kho giới hạn số lượng, ước tính giao hàng, review và trạng thái không tìm thấy; compare; wishlist; saved rooms (tạo, đổi tên, xoá, thêm/bớt món); giỏ hàng (số lượng, xoá, mã giảm giá hợp lệ/không hợp lệ/hết hạn, lưu để mua sau); checkout (địa chỉ, khung giờ giao, thanh toán khi nhận hàng hoặc thanh toán mô phỏng — không thu thập thẻ, review, trang thành công có mã đơn); theo dõi đơn, lịch sử đơn, huỷ/đổi trả; đăng ký/đăng nhập/đăng xuất/quên mật khẩu (mô phỏng); sửa hồ sơ và sổ địa chỉ; form liên hệ.
+- **Không có giao dịch thật:** mọi đơn là "demo order", không thu tiền, không gửi email. Tài khoản demo: `demo@luxroom.com` / `luxroom123`.
+
+Kiểm thử (cần Playwright qua `NODE_PATH`, phục vụ bản build `dist/`):
+
+```bash
+npm run build
+py -3 -m http.server 8923 --bind 127.0.0.1 --directory dist
+node qa/e2e-full-prototype.mjs        # toàn bộ luồng + reset + quét console error / href="#"
+node qa/inventory-controls.mjs        # liệt kê và bấm thử mọi control trên 16 trang
+npm run qa                            # các kiểm tra tĩnh sẵn có
+```
+
 ### Đối tượng sử dụng
 
 Dự án phù hợp để:

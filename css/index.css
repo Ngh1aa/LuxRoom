@@ -279,7 +279,7 @@
   .edited-heading { margin-bottom: 30px; }
   .product-edit { grid-template-columns: 1fr 1fr; }
   .product-copy h3 { font-size: 1.25rem; }
-  .product-copy p { font-size: .7rem; }
+  .product-copy p { font-size: .75rem; }
   .room-edit { padding-inline: 16px; }
   .room-grid { grid-template-columns: 1fr; }
   .room-card, .room-card-wide { grid-column: auto; min-height: 390px; }

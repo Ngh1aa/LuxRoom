@@ -193,8 +193,8 @@
   .room-index { width: calc(100% - 32px); padding-block: 48px; }
   .room-index a { min-height: 92px; grid-template-columns: 30px 1fr auto; }
   .room-index strong { font-size: 2rem; }
-  .room-index small { font-size: .72rem; }
-  .room-index b { font-size: .58rem; }
+  .room-index small { font-size: .75rem; }
+  .room-index b { font-size: .75rem; }
   .room-chapter { width: calc(100% - 32px); padding-block: 64px; }
   .room-chapter-media { min-height: 400px; }
   .room-chapter-copy h2 { font-size: clamp(2.8rem, 13vw, 4rem); }

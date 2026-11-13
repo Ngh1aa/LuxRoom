@@ -9,15 +9,16 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/success.css" />
+  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
 </head>
 <body class="success-page">
   <header class="topbar" aria-label="Primary navigation">
-    <a class="brand" href="index.html" aria-label="LuxRoom home"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
+    <a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
     <nav class="main-nav" aria-label="Main menu"><a href="index.html">Home</a><a href="products.html">Collection</a><a href="about.html">Our story</a><a href="contact.html">Contact</a></nav>
     <div class="topbar-actions">
       <button aria-label="Search" class="icon-button" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
-      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" data-cart-count style="display:none">0</span></a>
-      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" data-wishlist-count style="display:none">0</span></a>
+      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span></a>
+      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span></a>
       <a aria-label="Account" class="icon-button" href="auth.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
     </div>
   </header>
@@ -27,13 +28,14 @@
       <p class="eyebrow" id="success-order-id">Order confirmed / —</p>
       <div class="success-mark" aria-hidden="true">✓</div>
       <h1>Thank you for<br><em>making room.</em></h1>
-      <p>We have received your order. The delivery journey below keeps every next step visible.</p>
+      <p class="success-demo-note" id="success-demo-note">This is a demo order. It is saved in this browser tab only: no payment was taken and nothing will be delivered.</p>
+      <p>The delivery journey below shows how a real LuxRoom order would move from confirmation to the room.</p>
       <dl class="success-order-facts">
         <div><dt>Estimated arrival</dt><dd id="success-arrival">—</dd></div>
         <div><dt>Delivery</dt><dd id="success-delivery">Room delivery</dd></div>
         <div><dt>Payment</dt><dd id="success-payment">—</dd></div>
       </dl>
-      <div class="success-actions"><a class="primary-button" id="track-order-link" href="tracking.html">Track order <span aria-hidden="true">↗</span></a><a class="secondary-button" href="products.html">Continue the collection</a></div>
+      <div class="success-actions"><a class="primary-button" id="track-order-link" href="tracking.html">Track order <span aria-hidden="true">↗</span></a><a class="secondary-button" href="products.html">Continue the collection</a><a class="text-link" id="success-history-link" href="profile.html#orders">Order history <span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="success-note" aria-labelledby="next-steps-title">
@@ -50,7 +52,7 @@
   </main>
 
   <footer class="site-shell footer"></footer>
-  <script src="js/common.js?v=ux-20260823-1"></script>
+  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/success.js?v=ux-20260823-1"></script>
   <script type="module" src="js/ui-feedback-init.js?v=0.13.0"></script>
 </body>

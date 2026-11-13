@@ -9,28 +9,31 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/checkout.css" />
+  <link rel="stylesheet" href="css/store-flows.css?v=demo-1" />
 </head>
 <body class="checkout-page">
   <header class="topbar" aria-label="Primary navigation">
-    <a class="brand" href="index.html" aria-label="LuxRoom home"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
+    <a class="brand" href="index.html"><span class="luxroom-wordmark">Lux<span>Room</span></span></a>
     <nav class="main-nav" aria-label="Main menu"><a href="index.html">Home</a><a href="products.html">Collection</a><a href="about.html">Our story</a><a href="contact.html">Contact</a></nav>
     <div class="topbar-actions">
       <button aria-label="Search" class="icon-button" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
-      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" data-cart-count style="display:none">0</span></a>
-      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" data-wishlist-count style="display:none">0</span></a>
+      <a aria-label="Cart" class="icon-button" href="cart.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2 3h2l3 12h10l2-8H6"></path></svg><span class="cart-badge" aria-hidden="true" data-cart-count style="display:none">0</span></a>
+      <a aria-label="Wishlist" class="icon-button" href="wishlist.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg><span class="cart-badge" aria-hidden="true" data-wishlist-count style="display:none">0</span></a>
       <a aria-label="Account" class="icon-button" href="auth.html"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
     </div>
   </header>
 
   <main class="site-shell checkout-main">
     <section class="checkout-intro">
-      <p class="eyebrow">Checkout / 04 steps</p>
+      <p class="eyebrow">Demo checkout / 04 steps</p>
       <h1>Bring the room<br><em>home.</em></h1>
       <p>Contact, delivery, payment and one final review — every practical detail is visible before you place the order.</p>
     </section>
 
-    <form class="checkout-layout" id="checkout-form">
+    <div class="checkout-alert" id="checkout-alert" role="alert" hidden></div>
+    <form class="checkout-layout" id="checkout-form" novalidate>
       <div class="checkout-forms">
+        <div class="checkout-account-note" id="checkout-account-note"></div>
         <section class="form-section" id="contact-step">
           <div class="section-number">01</div>
           <div class="form-content">
@@ -46,6 +49,10 @@
           <div class="section-number">02</div>
           <div class="form-content">
             <div class="form-heading"><h2>Delivery</h2><p>Where and how should we bring your selected objects?</p></div>
+            <div class="saved-address-picker" id="saved-address-picker" hidden>
+              <label for="saved-address">Use a saved address</label>
+              <select id="saved-address"></select>
+            </div>
             <div class="form-grid">
               <div class="form-group full-width"><label for="full-name">Full name</label><input id="full-name" name="fullName" type="text" autocomplete="name" required placeholder="Full name" /></div>
               <div class="form-group full-width"><label for="address">Address</label><input id="address" name="address" type="text" autocomplete="street-address" required placeholder="House number and street" /></div>
@@ -59,6 +66,15 @@
               <legend>Delivery method</legend>
               <label class="choice-row"><input type="radio" name="deliveryMethod" value="room" checked /><span><strong>Room delivery</strong><small>Carefully delivered into your chosen room.</small></span><em id="room-delivery-fee">Included</em></label>
               <label class="choice-row"><input type="radio" name="deliveryMethod" value="placement" /><span><strong>Room delivery + placement</strong><small>Delivered, positioned and packaging removed.</small></span><em>+$45</em></label>
+            </fieldset>
+
+            <fieldset class="choice-group delivery-slot" id="delivery-slot">
+              <legend>Delivery slot</legend>
+              <p class="delivery-slot__hint" id="delivery-slot-hint">Choose a day after your pieces are ready. The room team confirms the slot by phone.</p>
+              <div class="form-grid">
+                <div class="form-group"><label for="delivery-date">Delivery day</label><select id="delivery-date" name="deliveryDate" required></select></div>
+                <div class="form-group"><label for="delivery-window">Time window</label><select id="delivery-window" name="deliveryWindow" required><option value="Morning, 08:00–12:00">Morning, 08:00–12:00</option><option value="Afternoon, 13:00–17:00">Afternoon, 13:00–17:00</option><option value="Evening, 17:00–20:00">Evening, 17:00–20:00</option></select></div>
+              </div>
             </fieldset>
 
             <fieldset class="access-fields" id="access-fields">
@@ -76,21 +92,15 @@
         <section class="form-section" id="payment-step">
           <div class="section-number">03</div>
           <div class="form-content">
-            <div class="form-heading"><h2>Payment</h2><p>Choose a payment path suited to your order.</p></div>
+            <div class="form-heading"><h2>Payment</h2><p>This is a demo store: no payment is taken and no card details are requested.</p></div>
             <fieldset class="choice-group payment-methods">
               <legend>Payment method</legend>
-              <label class="choice-row"><input type="radio" name="paymentMethod" value="Bank transfer / QR" checked /><span><strong>Bank transfer / QR</strong><small>Transfer details appear after confirmation.</small></span></label>
-              <label class="choice-row"><input type="radio" name="paymentMethod" value="VNPay / local payment" /><span><strong>VNPay / local payment</strong><small>Continue through a local secure payment window.</small></span></label>
-              <label class="choice-row" id="deposit-payment" hidden><input type="radio" name="paymentMethod" value="30% made-to-order deposit" /><span><strong>30% made-to-order deposit</strong><small>The remaining balance is due before delivery.</small></span></label>
-              <label class="choice-row"><input type="radio" name="paymentMethod" value="Credit / Debit Card" /><span><strong>Credit / Debit Card</strong><small>Visa, Mastercard and local debit cards.</small></span></label>
+              <label class="choice-row"><input type="radio" name="paymentMethod" value="Pay on delivery" checked /><span><strong>Pay on delivery</strong><small>Settle with the room team when the pieces arrive. Nothing is charged now.</small></span></label>
+              <label class="choice-row"><input type="radio" name="paymentMethod" value="Simulated card payment" /><span><strong>Simulated card payment</strong><small>A demo approval step. No card number is collected and nothing is charged.</small></span></label>
             </fieldset>
-            <div class="card-fields" id="card-fields" hidden>
-              <div class="form-grid">
-                <div class="form-group full-width"><label for="card-name">Name on card</label><input id="card-name" name="cardName" type="text" autocomplete="cc-name" placeholder="Name as printed" /></div>
-                <div class="form-group full-width"><label for="card-number">Card number</label><input id="card-number" name="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" pattern="[0-9 ]{16,19}" /></div>
-                <div class="form-group"><label for="card-expiry">Expiry date</label><input id="card-expiry" name="cardExpiry" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" /></div>
-                <div class="form-group"><label for="card-cvc">CVC</label><input id="card-cvc" name="cardCvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="000" pattern="[0-9]{3,4}" maxlength="4" /></div>
-              </div>
+            <div class="simulated-payment" id="simulated-payment" hidden>
+              <p>When you place the order, the demo shows an approval step instead of a payment window. You will not be asked for card details.</p>
+              <label class="consent-check"><input type="checkbox" id="simulated-consent" name="simulatedConsent" /><span>I understand this is a simulated payment and no money moves.</span></label>
             </div>
           </div>
         </section>
@@ -103,7 +113,8 @@
               <article><div><span>Contact</span><a href="#contact-step">Edit</a></div><p id="review-contact">Add your email and phone above.</p></article>
               <article><div><span>Delivery address</span><a href="#delivery-step">Edit</a></div><p id="review-address">Add your delivery address above.</p></article>
               <article><div><span>Delivery</span><a href="#delivery-step">Edit</a></div><p id="review-delivery">Room delivery</p></article>
-              <article><div><span>Payment</span><a href="#payment-step">Edit</a></div><p id="review-payment">Bank transfer / QR</p></article>
+              <article><div><span>Delivery slot</span><a href="#delivery-slot">Edit</a></div><p id="review-slot">Choose a delivery day above.</p></article>
+              <article><div><span>Payment</span><a href="#payment-step">Edit</a></div><p id="review-payment">Pay on delivery</p></article>
             </div>
           </div>
         </section>
@@ -115,16 +126,17 @@
         <div class="summary-items" id="checkout-summary-items"></div>
         <div class="summary-arrival"><span>Estimated arrival</span><strong id="checkout-arrival">—</strong><small id="checkout-delivery-label">Room delivery</small></div>
         <div class="summary-row"><span>Objects</span><span id="checkout-subtotal">$0</span></div>
+        <div class="summary-row summary-row--discount" id="checkout-discount-row" hidden><span id="checkout-discount-label">Promo</span><span id="checkout-discount">−$0</span></div>
         <div class="summary-row"><span>Room delivery</span><span id="checkout-shipping">Included</span></div>
         <div class="summary-row total"><span>Total</span><span id="checkout-total">$0</span></div>
         <button class="primary-button place-order-btn" type="submit">Place order <span aria-hidden="true">↗</span></button>
-        <p class="order-note">By placing the order you confirm the delivery details above. This portfolio prototype does not process a real payment.</p>
+        <p class="order-note">Demo checkout. Placing the order records it in this browser tab only: no payment is taken and nothing is delivered.</p>
       </aside>
     </form>
   </main>
 
   <footer class="site-shell footer"></footer>
-  <script src="js/common.js?v=ux-20260823-1"></script>
+  <script src="js/store-data.js?v=demo-1"></script><script src="js/common.js?v=ux-20260823-1"></script>
   <script src="js/checkout.js?v=ux-20260823-1"></script>
   <script type="module" src="js/ui-feedback-init.js?v=0.13.0"></script>
 </body>

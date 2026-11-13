@@ -37,7 +37,7 @@ function renderWishlist() {
           <div class="product-meta-row">
             <h3>${product.name}</h3>
             <span class="price">$${product.price}</span>
-            <small>${product.dimensions.width} × ${product.dimensions.depth} cm · ${product.variants.length} finishes</small>
+            <small>${product.dimensions.width} × ${product.dimensions.depth} cm, ${product.variants.length} finishes</small>
           </div>
           <div class="product-actions-row">
             <button class="move-to-cart-action" onclick="window.wishlistMoveToCart(${product.id})" type="button">

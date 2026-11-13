@@ -38,8 +38,8 @@
   --font-ui: "DM Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-body: var(--font-ui);
 
-  --text-2xs: .625rem;
-  --text-xs: .6875rem;
+  --text-2xs: .75rem;
+  --text-xs: .75rem;
   --text-sm: .75rem;
   --text-base: .9375rem;
   --text-md: 1rem;
@@ -111,7 +111,7 @@
   --btn-height: var(--control-h);
   --btn-height-sm: var(--control-h-sm);
   --btn-radius: var(--radius-sm);
-  --btn-font-size: .6875rem;
+  --btn-font-size: .75rem;
   --btn-font-weight: 600;
   --input-height: 48px;
   --input-radius: var(--radius-sm);

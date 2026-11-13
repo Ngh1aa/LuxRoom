@@ -92,7 +92,7 @@
 }
 .nav-discovery-flyout a:nth-of-type(even) { border-left: 1px solid var(--hairline) !important; }
 .nav-discovery-flyout a::after { display: none !important; }
-.nav-discovery-flyout a::before { color: var(--stone); font: 600 .56rem/1 var(--font-ui); letter-spacing: .1em; }
+.nav-discovery-flyout a::before { color: var(--stone); font: 600 .75rem/1 var(--font-ui); letter-spacing: .1em; }
 .nav-shop-flyout a:nth-of-type(1)::before, .nav-rooms-flyout a:nth-of-type(1)::before { content: "01"; }
 .nav-shop-flyout a:nth-of-type(2)::before, .nav-rooms-flyout a:nth-of-type(2)::before { content: "02"; }
 .nav-shop-flyout a:nth-of-type(3)::before, .nav-rooms-flyout a:nth-of-type(3)::before { content: "03"; }
@@ -188,7 +188,7 @@
 }
 .search-discovery-link > span {
   color: var(--stone);
-  font: 600 .58rem/1.2 var(--font-ui);
+  font: 600 .75rem/1.2 var(--font-ui);
   letter-spacing: .11em;
   text-transform: uppercase;
 }
@@ -235,8 +235,8 @@
 .footer-newsletter input::placeholder { color: rgba(251,250,247,.48); }
 .footer-newsletter button { height: 40px; display: grid; place-items: center; color: var(--paper); }
 .footer-newsletter button:hover { color: #C2A58F; }
-.footer-rich__newsletter small { font-size: .62rem; color: rgba(251,250,247,.48); }
-.footer-rich__bottom { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 20px 34px; padding-top: 20px; border-top: 1px solid rgba(251,250,247,.16); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.footer-rich__newsletter small { font-size: .75rem; color: rgba(251,250,247,.48); }
+.footer-rich__bottom { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 20px 34px; padding-top: 20px; border-top: 1px solid rgba(251,250,247,.16); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
 .footer-rich__meta, .footer-rich__legal { display: flex; flex-wrap: wrap; gap: 10px 24px; }
 .footer-rich__legal { justify-content: flex-end; }
 .footer-rich__delivery { white-space: nowrap; }
@@ -309,7 +309,7 @@
     padding: 0 10px !important;
     border: 0 !important;
     color: var(--stone) !important;
-    font-size: .7rem !important;
+    font-size: .75rem !important;
   }
   .topbar.menu-open .nav-discovery-flyout a:nth-of-type(even) { border-left: 0 !important; }
   .topbar.menu-open .nav-discovery-flyout a:hover,

@@ -155,7 +155,8 @@ await capture('detail-mobile-lower', 'detail.html?product=8', mobile, async (pag
 
 async function seedSavedRoom(page) {
   await page.evaluate(() => {
-    localStorage.setItem('luxroom-saved-room', JSON.stringify({
+    // User data lives in sessionStorage (demo store); the legacy single-room key is migrated on load.
+    sessionStorage.setItem('luxroom-saved-room', JSON.stringify({
       room: 'Living',
       measurements: { width: '420', depth: '360', doorway: '88', clearance: '60' },
       items: [
